@@ -118,13 +118,13 @@ namespace jjget
             lblAuthor.Text = novel.author;
             lblChapterCnt.Text = novel.chapterCount.ToString();
             lblCntDone.Text = novel.chapterDone.ToString();
+            lblFinnished.Visible = novel.isFinnished;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             //novel = new Novel();
             //novel.chapterCount = 999;
-
             updateNovelSettings();
             if (btnStart.Text == "暂停")
             {
@@ -145,6 +145,7 @@ namespace jjget
                         try
                         {
                             chpt = novel.getSingleChapter(i);
+                            if (chpt.title == "") continue;
                             break;
                         }
                         catch (System.Net.WebException ex)
@@ -158,9 +159,11 @@ namespace jjget
                             break;
                         }
                     }
-                   
                     if (chpt.title == "")
-                        break;
+                    {
+                        setPrompt(("在章节" + i + "得到空白内容"), Color.Red);
+                        return;
+                    }
                     novel.saveChapter(chpt, chkSplitChapter.Checked);
                     if (need_stop)
                     {
@@ -184,6 +187,8 @@ namespace jjget
                 }
                 ));
                 setPrompt(novel.name + "下载结束(*￣▽￣)y ");
+                if(novel.isFinnished)
+                    novel.deleteProgress();
             }));
             downloadThread.Start();
             

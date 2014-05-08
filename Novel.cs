@@ -18,6 +18,7 @@ namespace jjget
         public int chapterDone;
         private int novelid;
         private string savePath;
+        public bool isFinnished;
         private bool useMobileEdition = true;
         private HttpUtil _savedHttpUtil = null;
         private WebProxy proxy = null;
@@ -179,6 +180,7 @@ namespace jjget
                 this.descriptions += root.SelectSingleNode("//div[@class='smallreadbody']/font").InnerText;
                 this.chapterCount = root.SelectNodes("//table[@class='cytable']/tbody/tr[@itemprop='chapter']").Count+1;
             }
+            isFinnished = descriptions.IndexOf("连载中") == -1;
             setPrompt("首页分析完成，可以开始了");
             readProgress();
             return true;
@@ -273,6 +275,12 @@ namespace jjget
                 chapterDone = 0;
             }
 
+        }
+
+        public void deleteProgress()
+        {
+            FileInfo file = new FileInfo(this.savePath + "\\" + this.name + ".jjget");
+            file.Delete();
         }
     }
 }

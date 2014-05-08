@@ -57,6 +57,7 @@
             this.txtNovelID = new System.Windows.Forms.TextBox();
             this.lblPromptU = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblFinnished = new System.Windows.Forms.Label();
             this.grpBookInfo.SuspendLayout();
             this.grpConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picProgress)).BeginInit();
@@ -77,6 +78,7 @@
             // grpBookInfo
             // 
             this.grpBookInfo.Controls.Add(this.lblChapterCnt);
+            this.grpBookInfo.Controls.Add(this.lblFinnished);
             this.grpBookInfo.Controls.Add(this.label3);
             this.grpBookInfo.Controls.Add(this.lblAuthor);
             this.grpBookInfo.Controls.Add(this.label2);
@@ -91,7 +93,7 @@
             // lblChapterCnt
             // 
             this.lblChapterCnt.AutoSize = true;
-            this.lblChapterCnt.Location = new System.Drawing.Point(257, 22);
+            this.lblChapterCnt.Location = new System.Drawing.Point(245, 22);
             this.lblChapterCnt.Name = "lblChapterCnt";
             this.lblChapterCnt.Size = new System.Drawing.Size(18, 20);
             this.lblChapterCnt.TabIndex = 4;
@@ -101,7 +103,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(207, 23);
+            this.label3.Location = new System.Drawing.Point(202, 23);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(54, 19);
             this.label3.TabIndex = 3;
@@ -322,6 +324,18 @@
             this.lblPromptU.Size = new System.Drawing.Size(424, 28);
             this.lblPromptU.TabIndex = 14;
             // 
+            // lblFinnished
+            // 
+            this.lblFinnished.AutoSize = true;
+            this.lblFinnished.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblFinnished.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.lblFinnished.Location = new System.Drawing.Point(274, 23);
+            this.lblFinnished.Name = "lblFinnished";
+            this.lblFinnished.Size = new System.Drawing.Size(39, 19);
+            this.lblFinnished.TabIndex = 5;
+            this.lblFinnished.Text = "完结";
+            this.lblFinnished.Visible = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -386,6 +400,7 @@
         private System.Windows.Forms.Label lblPromptU;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label lblFinnished;
     }
 }
 
