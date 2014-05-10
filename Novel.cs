@@ -21,16 +21,21 @@ namespace jjget
         public bool isFinnished;
         private bool useMobileEdition = true;
         private HttpUtil _savedHttpUtil = null;
+        private string cookiestr;
+        public string userDetail;
+        public bool hasLogin = false;
         private WebProxy proxy = null;
         private Action<String, Color> setProgressDelegate;
+        private List<int> vipChapters = new List<int>();
         public struct Chapter
         {
             public int chapterIndex;
             public string title;
             public string content;
+            public bool isVip;
             public override string ToString()
             {
-                return chapterIndex +" " +title+"\r\n"+content;
+                return chapterIndex + (isVip?"[VIP]":"") + " " + title + "\r\n" + content;
             }
         }
 
@@ -38,6 +43,7 @@ namespace jjget
         {
             this.savePath = loc;
             this.readProgress();
+            this.readSavedUser();
         }
 
         public void setUseMobile(bool use)
@@ -68,18 +74,32 @@ namespace jjget
 
         private string getNovelURL()
         {
-            if (this.useMobileEdition)
-                return "http://m.jjwxc.com/book2/" + this.novelid;
-            else
-                return "http://www.jjwxc.net/onebook.php?novelid=" + this.novelid;
+            return getNovelURL(false, true);
         }
 
-        private string getChapterURL(int chap)
+        private string getNovelURL(bool isVip, bool more)
         {
             if (this.useMobileEdition)
-                return getNovelURL() + "/" + chap;
+                if (isVip)
+                    return "http://m.jjwxc.com/vip/" + this.novelid;
+                else
+                    return "http://m.jjwxc.com/book2/" + this.novelid + (more?"?more=1":"");
             else
-                return getNovelURL() + "&chapterid=" + chap;
+            {
+                if(isVip)
+                    return "http://my.jjwxc.net/onebook_vip.php?novelid=" + this.novelid;
+                else
+                    return "http://www.jjwxc.net/onebook.php?novelid=" + this.novelid;
+            }
+        }
+
+        private string getChapterURL(int chap, bool isVip)
+        {
+            if (this.useMobileEdition)
+                return getNovelURL(isVip, false) + "/" + chap + 
+                    (isVip?("?ctime=" + Math.Floor(new Random().NextDouble() * 2000000000)):"");
+            else
+                return getNovelURL(isVip, false) + "&chapterid=" + chap;
         }
 
         private string getReferer()
@@ -94,6 +114,7 @@ namespace jjget
             if (this.useMobileEdition || _savedHttpUtil == null)
             {
                 HttpUtil hu = new HttpUtil();
+                hu.cookiestr = cookiestr;
                 hu.setProxy(this.proxy);
                 hu.setEncoding("gb2312");
                 _savedHttpUtil = hu;
@@ -133,6 +154,45 @@ namespace jjget
             }
             return "\r\n" + result.Replace("<br>", "\r\n").Replace("</br>", "\r\n").Trim();
         }
+
+        public bool jjLogin(string username, string pwd)
+        {
+            setPrompt("正在登陆……");
+            HttpUtil hu = getHTTPUtil();
+            hu.Get("http://my.jjwxc.net/login.php?" +
+                "action=login&login_mode=ajax&USEUUID=undefined&loginname="+username+"&loginpassword="+pwd+"&" +
+                "Ekey=&Challenge=&auth_num=&cookietime=1&" +
+                "client_time=" + HttpUtil.getTimeStamp() +
+                "&jsonp=jQuery18004921355885453522_" + HttpUtil.getTimeStamp() + "123" +
+                "&_=" + HttpUtil.getTimeStamp() + "123");
+            cookiestr = hu.cookiestr;
+            hasLogin = cookiestr != null && cookiestr.Length > 10;
+            if (hasLogin)
+            {
+                setPrompt("正在获取用户信息……");
+                getUserDetail();
+                writeSavedUser();
+                setPrompt("登陆成功(*￣▽￣)y ");
+            }
+            return hasLogin;
+            
+        }
+        private void getUserDetail()
+        {
+            HttpUtil hu = getHTTPUtil();
+            string my = hu.Get("http://my.jjwxc.net/backend/userinfo.php");
+            HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
+            hd.LoadHtml(my);
+            HtmlNode hn;
+            HtmlNodeCollection hnc;
+            HtmlNode root = hd.DocumentNode;
+            HtmlNode tb = root.SelectSingleNode("//table[@bgcolor='#009900']");
+            userDetail = "已登录 ID:" + tb.SelectSingleNode("./tr[1]//font[@class='readerid']").InnerText.Trim();
+            string _nick = tb.SelectSingleNode("./tr[2]/td[2]/div").InnerText;
+            if (_nick != "您还没有设置昵称")
+                userDetail += " " + _nick;
+            userDetail += " "+tb.SelectSingleNode("./tr[6]//span[@id='clickEmail']").InnerText;
+        }
         public bool getIndex(int novelid){
             this.novelid = novelid;
             setPrompt("下载首页中……", Color.Orange);
@@ -164,7 +224,13 @@ namespace jjget
                         Replace(" ", "").Replace(":", "：") + "\n";
                 }
                 //chapters
-                this.chapterCount = root.SelectNodes("//div[@style='padding-left:10px']/a").Count;
+                HtmlNodeCollection chaps = root.SelectNodes("//div[@style='padding-left:10px']/a");
+                this.chapterCount = chaps.Count;
+                foreach (HtmlNode c in chaps)
+                {
+                    if (c.OuterHtml.IndexOf("vip") != -1)
+                        vipChapters.Add(chaps.IndexOf(c)+1);
+                }
             }
             else 
             {
@@ -178,23 +244,40 @@ namespace jjget
                         Replace(" ", "").Replace(":", "："))+ "\n";
                 }
                 this.descriptions += root.SelectSingleNode("//div[@class='smallreadbody']/font").InnerText;
-                this.chapterCount = root.SelectNodes("//table[@class='cytable']/tbody/tr[@itemprop='chapter']").Count+1;
+                HtmlNodeCollection chaps = root.SelectNodes("//table[@class='cytable']/tbody/tr[@itemtype='http://schema.org/Chapter']");
+                this.chapterCount = chaps.Count;
+                foreach (HtmlNode c in chaps)
+                {
+                    if (c.InnerHtml.IndexOf("onebook_vip") != -1)
+                        vipChapters.Add(int.Parse(c.SelectSingleNode("./td[1]").InnerText.Trim()));
+                }
+                this.chapterCount = chaps.Count;
             }
             isFinnished = descriptions.IndexOf("连载中") == -1;
             setPrompt("首页分析完成，可以开始了");
             readProgress();
             return true;
         }
+
         public Chapter getSingleChapter(int chapter)
         {
             if (chapter > this.chapterCount)
-            {
                 throw new IndexOutOfRangeException("章节号"+chapter+"超出总数("+this.chapterCount+")");
+            bool isVip = isVipChapter(chapter);
+            if (isVip)
+            {
+                if(!hasLogin)
+                    throw new Exception("章节" + chapter + "是VIP章节，请登陆ww");
+                if (useMobileEdition)
+                {
+                    setPrompt("已切换回电脑版", Color.Cyan);
+                    useMobileEdition = false;
+                }
             }
             HttpUtil hu = getHTTPUtil();
-            setPrompt("章节" + chapter + "下载中……", Color.Orange);
-            string html = hu.Get(getChapterURL(chapter), getNovelURL());
-            //StreamReader sFile = new StreamReader("z://2.htm", Encoding.GetEncoding("gb2312"));
+            setPrompt("章节" + chapter + (isVip?"[VIP]":"") + "下载中……", Color.Orange);
+            string html = hu.Get(getChapterURL(chapter, isVip), getNovelURL());
+            //StreamReader sFile = new StreamReader("z://.txt", Encoding.GetEncoding("gb2312"));
             //string html = sFile.ReadToEnd();
             //setPrompt("分析中……", Color.Orange);
             HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
@@ -202,6 +285,7 @@ namespace jjget
             HtmlNodeCollection hnc;
             HtmlNode root = hd.DocumentNode;
             Chapter chpt = new Chapter();
+            chpt.isVip = isVip;
             if (useMobileEdition)
             {
                 chpt.title = root.SelectSingleNode("//h2[@class='big o']").InnerText;
@@ -220,7 +304,7 @@ namespace jjget
                 HtmlNode hn2 = root.SelectSingleNode("//div[@class='readsmall']");
                 chpt.content = parseText_Img_Link(hn2);
                 //内容
-                List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr").ToList();
+                List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img").ToList();
                 foreach(HtmlNode hn in hnl){
                     novelnode.RemoveChild(hn);
                 }
@@ -235,6 +319,12 @@ namespace jjget
             chapterDone = chapter;
             return chpt;
         }
+
+        public bool isVipChapter(int chptindx)
+        {
+            return vipChapters.IndexOf(chptindx) != -1;
+        }
+
         public void saveChapter(Chapter chpt, bool split)
         {
             string savepath;
@@ -243,8 +333,8 @@ namespace jjget
             else
                 savepath = this.savePath + "\\" + this.name + ".txt";
             FileStream fs = new FileStream(savepath, FileMode.Append, FileAccess.Write);
-            StreamWriter sw = new StreamWriter(fs);   
-            sw.Write(chpt.ToString());
+            StreamWriter sw = new StreamWriter(fs);
+            sw.WriteLine(chpt.ToString() + "\r\n");
             sw.Close();
             fs.Close();
             //setPrompt("章节" + chpt.chapterIndex + "(" + chpt.title + ")已写入磁盘");
@@ -281,6 +371,42 @@ namespace jjget
         {
             FileInfo file = new FileInfo(this.savePath + "\\" + this.name + ".jjget");
             file.Delete();
+        }
+
+        public void readSavedUser()
+        {
+            try
+            {
+                FileStream fs = new FileStream(this.savePath + "\\.jjsave", FileMode.Open);
+                StreamReader sr = new StreamReader(fs);
+                cookiestr = sr.ReadLine();
+                userDetail = sr.ReadLine();
+                sr.Close();
+                fs.Close();
+                hasLogin = true;
+            }
+            catch (Exception)
+            {
+            }
+        }
+        public void writeSavedUser()
+        {
+            if (cookiestr == "")
+                return;
+            FileStream fs = new FileStream(this.savePath + "\\.jjsave", FileMode.Create, FileAccess.Write);
+            StreamWriter sw = new StreamWriter(fs);
+            sw.WriteLine(cookiestr);
+            sw.WriteLine(userDetail);
+            sw.Close();
+            fs.Close();
+        }
+        public void deleteSavedUser()
+        {
+            FileInfo file = new FileInfo(this.savePath + "\\" + this.name + ".jjsave");
+            file.Delete();
+            cookiestr = "";
+            userDetail = "";
+            hasLogin = false;
         }
     }
 }

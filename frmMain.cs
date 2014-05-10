@@ -109,8 +109,8 @@ namespace jjget
                 if(!novel.getIndex(int.Parse(txtNovelID.Text)))
                     throw new ArgumentNullException("正则匹配失败？");
             }catch(Exception ex){
-                MessageBox.Show("处理失败！\n"+ex.Message, "JJGET-ERROR",MessageBoxButtons.OK,MessageBoxIcon.Error);
-                setPrompt("处理失败！ " + ex.Message, Color.Red);
+                MessageBox.Show("处理失败！大概是NovelID输错了？\n"+ex.Message, "JJGET-ERROR",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                setPrompt("处理失败！ ", Color.Red);
                 return;
             }
             grpBookInfo.Text = novel.name;
@@ -119,6 +119,7 @@ namespace jjget
             lblChapterCnt.Text = novel.chapterCount.ToString();
             lblCntDone.Text = novel.chapterDone.ToString();
             lblFinnished.Visible = novel.isFinnished;
+            btnStart.Enabled = true;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -140,6 +141,7 @@ namespace jjget
                 for (int i = novel.chapterDone + 1; i <= novel.chapterCount; i++)
                 {
                     Thread.Sleep(233);
+                    bool terminate = false;
                     for (int retries = 0; retries < 3; retries++)
                     {
                         try
@@ -150,14 +152,33 @@ namespace jjget
                         }
                         catch (System.Net.WebException ex)
                         {
-                            setPrompt(("在章节" + i + "处遇到错误 " + ex.Message.ToString().Split('\n')[0]+"。重试"+(retries+1)+"次"), Color.Red);
+                            setPrompt(("在章节" + i + "处遇到错误 " + ex.Message.ToString().Split('\n')[0] + "。重试" + (retries + 1) + "次"), Color.Red);
+                        }
+                        catch (NullReferenceException)
+                        {
+                            if(novel.isVipChapter(i))
+                                setPrompt(("章节" + i + "是VIP章节，"+(novel.hasLogin?"你可能没有购买":"需要登录后才能下载")), Color.Red);
+                            else
+                                MessageBox.Show("处理章节" + i + "时正则匹配失败，请联系作者", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            terminate = true;
+                            break;
                         }
                         catch (Exception ex)
                         {
                             setPrompt(("在章节" + i + "处遇到错误 " + ex.Message).Split('\n')[0], Color.Red);
                             MessageBox.Show("在章节" + i + "处遇到错误\n" + ex.Message, "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            terminate = true;
                             break;
                         }
+                    }
+                    if (terminate)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            btnStart.Text = "开始";
+                            setPrompt(("已中断下载"), Color.Red);
+                        }));
+                        return;
                     }
                     if (chpt.title == "")
                     {
@@ -186,7 +207,7 @@ namespace jjget
                     lblProgBar.Visible = false;
                 }
                 ));
-                setPrompt(novel.name + "下载结束(*￣▽￣)y ");
+                setPrompt("《"+novel.name + "》下载结束(*￣▽￣)y ");
                 if(novel.isFinnished)
                     novel.deleteProgress();
             }));
@@ -215,10 +236,16 @@ namespace jjget
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            this.Text += " v" + Application.ProductVersion;
             txtSaveLoc.Text = Path.GetDirectoryName(System.Windows.Forms.Application.StartupPath);
+            novel.setSaveLoc(txtSaveLoc.Text);
             Program.SetCueText(txtNovelID, "输入NovelID");
             Program.SetCueText(txtProxyServ, "代理IP");
             Program.SetCueText(txtProxyPort, "代理端口");
+            lblLoginInfo.Size = new Size(417, 27);
+            lblLoginInfo.Location = new Point(label8.Location.X+3, lblLoginInfo.Location.Y);
+            loginRoutine(true);
+            //lblLoginInfo.Visible = true;
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -232,6 +259,81 @@ namespace jjget
             txtProxyPort.Enabled = chkUseProxy.Checked;
             txtProxyServ.Enabled = chkUseProxy.Checked;
         }
+
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            (new frmAbout()).ShowDialog();
+        }
+        private bool loginRoutine(bool isCheck)
+        {
+            Action setctls = new Action(() => {
+                lblLoginInfo.Visible = true;
+                lblLoginInfo.Text = novel.userDetail;
+                btnLogin.Text = "退出";
+                btnLogin.Enabled = true;
+            });
+            if (novel.hasLogin)
+            {
+                this.Invoke(setctls);
+                return true;
+            }
+            if (isCheck)//check only
+                return false;
+            if (novel.jjLogin(txtUsername.Text, txtPwd.Text))
+            {
+                this.Invoke(setctls);
+                return true;
+            }
+            return false;
+        }
+
+        private void chkUsePwdMask_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkUsePwdMask.Checked)
+                txtPwd.PasswordChar = '*';
+            else
+                txtPwd.PasswordChar = '\0';
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            if(btnLogin.Text == "登陆"){
+                if (txtUsername.Text == "" || txtPwd.Text == "")
+                {
+                    MessageBox.Show("请输入用户名密码ww", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+                btnLogin.Enabled = false;
+                new Thread(new ThreadStart(() =>
+                {
+                    if (!loginRoutine(false))
+                        MessageBox.Show("登录失败！");
+                })).Start();
+            }else
+            {
+                novel.deleteSavedUser();
+                lblLoginInfo.Visible = false;
+                lblLoginInfo.Text = "";
+                btnLogin.Text = "登陆";
+            }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(label2.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        }
+
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            MessageBox.Show("【下载】\n"+
+                "·使用手机版有时可以加快下载速度\n"+
+                "·必须登录已购买VIP章节的账户才能下载VIP章节\n"+
+                "·勾选使用手机版时，若遇到VIP章节，会自动切换电脑版\n\n"+
+                "【连载】\n"+
+                "保留同一目录下的jjget文件即可在下次文章更新后继续下载", "JJGET-HELP", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
 
 
 
