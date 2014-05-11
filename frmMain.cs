@@ -81,6 +81,7 @@ namespace jjget
 
         private void updateNovelSettings()
         {
+            novel.setDelegate(this.setPrompt);
             novel.setUseMobile(chkUseMobileEdition.Checked);
             if (!chkUseProxy.Checked)
                 return;
@@ -96,6 +97,7 @@ namespace jjget
 
         private void btnGetIndex_Click(object sender, EventArgs e)
         {
+            novel = new Novel();
             updateNovelSettings();
             if (txtNovelID.Text == "")
             {
@@ -157,7 +159,8 @@ namespace jjget
                         catch (NullReferenceException)
                         {
                             if(novel.isVipChapter(i))
-                                setPrompt(("章节" + i + "是VIP章节，"+(novel.hasLogin?"你可能没有购买":"需要登录后才能下载")), Color.Red);
+                                setPrompt(("章节" + i + "是VIP章节，"+ 
+                                    (novel.hasLogin?"账号没有购买，或者登陆过期":"需要登录后才能下载")), Color.Red);
                             else
                                 MessageBox.Show("处理章节" + i + "时正则匹配失败，请联系作者", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             terminate = true;
@@ -237,7 +240,8 @@ namespace jjget
         private void frmMain_Load(object sender, EventArgs e)
         {
             this.Text += " v" + Application.ProductVersion;
-            txtSaveLoc.Text = Path.GetDirectoryName(System.Windows.Forms.Application.StartupPath);
+            txtSaveLoc.Text = Environment.CurrentDirectory;
+            //txtSaveLoc.Text = Path.GetDirectoryName(System.Windows.Forms.Application.StartupPath);
             novel.setSaveLoc(txtSaveLoc.Text);
             Program.SetCueText(txtNovelID, "输入NovelID");
             Program.SetCueText(txtProxyServ, "代理IP");
@@ -308,7 +312,8 @@ namespace jjget
                 new Thread(new ThreadStart(() =>
                 {
                     if (!loginRoutine(false))
-                        MessageBox.Show("登录失败！");
+                        MessageBox.Show("登录失败！", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    this.Invoke(new Action(() => btnLogin.Enabled = true));
                 })).Start();
             }else
             {
@@ -332,6 +337,11 @@ namespace jjget
                 "·勾选使用手机版时，若遇到VIP章节，会自动切换电脑版\n\n"+
                 "【连载】\n"+
                 "保留同一目录下的jjget文件即可在下次文章更新后继续下载", "JJGET-HELP", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void btnOpenDir_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start(txtSaveLoc.Text);
         }
 
 

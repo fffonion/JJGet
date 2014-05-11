@@ -35,7 +35,7 @@ namespace jjget
             public bool isVip;
             public override string ToString()
             {
-                return chapterIndex + (isVip?"[VIP]":"") + " " + title + "\r\n" + content;
+                return "第" + chapterIndex + "章 "+ (isVip?"[VIP]":"") + " " + title + "\r\n" + content;
             }
         }
 
@@ -159,7 +159,7 @@ namespace jjget
         {
             setPrompt("正在登陆……");
             HttpUtil hu = getHTTPUtil();
-            hu.Get("http://my.jjwxc.net/login.php?" +
+            string result = hu.Get("http://my.jjwxc.net/login.php?" +
                 "action=login&login_mode=ajax&USEUUID=undefined&loginname="+username+"&loginpassword="+pwd+"&" +
                 "Ekey=&Challenge=&auth_num=&cookietime=1&" +
                 "client_time=" + HttpUtil.getTimeStamp() +
@@ -173,7 +173,8 @@ namespace jjget
                 getUserDetail();
                 writeSavedUser();
                 setPrompt("登陆成功(*￣▽￣)y ");
-            }
+            }else
+                setPrompt("登陆失败QAQ", Color.Red);
             return hasLogin;
             
         }
@@ -193,6 +194,7 @@ namespace jjget
                 userDetail += " " + _nick;
             userDetail += " "+tb.SelectSingleNode("./tr[6]//span[@id='clickEmail']").InnerText;
         }
+
         public bool getIndex(int novelid){
             this.novelid = novelid;
             setPrompt("下载首页中……", Color.Orange);
@@ -310,7 +312,7 @@ namespace jjget
                 }
                 chpt.content = "　　" + HtmlEntity.DeEntitize(
                         novelnode.InnerHtml.Replace("<br>","\r\n").Replace("</br>","\r\n"))
-                    .Trim() +  chpt.content;
+                    .Replace("@无限好文，尽晋江文学城","").Trim() +  chpt.content;
                 
                 
             }
@@ -351,6 +353,7 @@ namespace jjget
         }
         private void readProgress()
         {
+            if (this.name == "" || this.name == null) return;
             string savepath = this.savePath + "\\" + this.name + ".jjget";
             try
             {
@@ -402,7 +405,7 @@ namespace jjget
         }
         public void deleteSavedUser()
         {
-            FileInfo file = new FileInfo(this.savePath + "\\" + this.name + ".jjsave");
+            FileInfo file = new FileInfo(this.savePath + "\\.jjsave");
             file.Delete();
             cookiestr = "";
             userDetail = "";

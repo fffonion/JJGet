@@ -66,6 +66,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.btnOpenDir = new System.Windows.Forms.Button();
             this.grpBookInfo.SuspendLayout();
             this.grpConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picProgress)).BeginInit();
@@ -198,6 +199,7 @@
             // 
             // grpConfig
             // 
+            this.grpConfig.Controls.Add(this.btnOpenDir);
             this.grpConfig.Controls.Add(this.btnLogin);
             this.grpConfig.Controls.Add(this.lblLoginInfo);
             this.grpConfig.Controls.Add(this.chkUsePwdMask);
@@ -434,6 +436,16 @@
             this.linkLabel2.VisitedLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
+            // btnOpenDir
+            // 
+            this.btnOpenDir.Location = new System.Drawing.Point(247, 21);
+            this.btnOpenDir.Name = "btnOpenDir";
+            this.btnOpenDir.Size = new System.Drawing.Size(88, 28);
+            this.btnOpenDir.TabIndex = 20;
+            this.btnOpenDir.Text = "打开";
+            this.btnOpenDir.UseVisualStyleBackColor = true;
+            this.btnOpenDir.Click += new System.EventHandler(this.btnOpenDir_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -509,6 +521,7 @@
         private System.Windows.Forms.Label lblLoginInfo;
         private System.Windows.Forms.Button btnLogin;
         private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.Button btnOpenDir;
     }
 }
 
