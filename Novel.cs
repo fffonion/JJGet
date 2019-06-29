@@ -6,6 +6,9 @@ using System.IO;
 using System.Net;
 using System.Drawing;
 using HtmlAgilityPack;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace jjget
 {
@@ -26,6 +29,7 @@ namespace jjget
         public bool hasLogin = false;
         private WebProxy proxy = null;
         private Action<String, Color> setProgressDelegate;
+        private Action<byte[]> setVerifyCodeDelegate;
         private List<int> vipChapters = new List<int>();
         public struct Chapter
         {
@@ -35,7 +39,7 @@ namespace jjget
             public bool isVip;
             public override string ToString()
             {
-                return "第" + chapterIndex + "章 "+ (isVip?"[VIP]":"") + " " + title + "\r\n" + content;
+                return "第" + chapterIndex + "章 " + (isVip ? "[VIP]" : "") + " " + title + "\r\n" + content;
             }
         }
 
@@ -51,7 +55,7 @@ namespace jjget
             this.useMobileEdition = use;
         }
 
-        public void setDelegate(Action<String, Color> d)
+        public void registerSetProgressDelegate(Action<String, Color> d)
         {
             this.setProgressDelegate = d;
         }
@@ -66,6 +70,16 @@ namespace jjget
             setProgressDelegate(text, c);
         }
 
+        public void registerSetVerifyCodeDelegate(Action<byte[]> d)
+        {
+            this.setVerifyCodeDelegate = d;
+        }
+
+        public void setVerifyCode(byte[] b)
+        {
+            this.setVerifyCodeDelegate(b);
+        }
+
         public void setHttpUtilProxy(string uri)
         {
             proxy = new WebProxy();
@@ -74,19 +88,21 @@ namespace jjget
 
         private string getNovelURL()
         {
-            return getNovelURL(false, true);
+            return getNovelURL(false, true, true);
         }
 
-        private string getNovelURL(bool isVip, bool more)
+        private string getNovelURL(bool isVip, bool more, bool whole)
         {
             if (this.useMobileEdition)
                 if (isVip)
-                    return "http://m.jjwxc.com/vip/" + this.novelid;
+                    return "http://m.jjwxc.com/vip/" + this.novelid + (whole ? "?whole=1" : "");
                 else
-                    return "http://m.jjwxc.com/book2/" + this.novelid + (more?"?more=1":"");
+                    return "http://m.jjwxc.com/book2/" + this.novelid + 
+                        (whole ? "?whole=1": "") +
+                        (more ? (whole ? "&":"?") + "more=1" : "");
             else
             {
-                if(isVip)
+                if (isVip)
                     return "http://my.jjwxc.net/onebook_vip.php?novelid=" + this.novelid;
                 else
                     return "http://www.jjwxc.net/onebook.php?novelid=" + this.novelid;
@@ -96,10 +112,10 @@ namespace jjget
         private string getChapterURL(int chap, bool isVip)
         {
             if (this.useMobileEdition)
-                return getNovelURL(isVip, false) + "/" + chap + 
-                    (isVip?("?ctime=" + Math.Floor(new Random().NextDouble() * 2000000000)):"");
+                return getNovelURL(isVip, false, false) + "/" + chap +
+                    (isVip ? ("?ctime=" + Math.Floor(new Random().NextDouble() * 2000000000)) : "");
             else
-                return getNovelURL(isVip, false) + "&chapterid=" + chap;
+                return getNovelURL(isVip, false, false) + "&chapterid=" + chap;
         }
 
         private string getReferer()
@@ -110,7 +126,7 @@ namespace jjget
                 return "http://www.jjwxc.net/";
         }
 
-        private HttpUtil getHTTPUtil(){
+        private HttpUtil getHTTPUtil() {
             if (this.useMobileEdition || _savedHttpUtil == null)
             {
                 HttpUtil hu = new HttpUtil();
@@ -155,28 +171,67 @@ namespace jjget
             return "\r\n" + result.Replace("<br>", "\r\n").Replace("</br>", "\r\n").Trim();
         }
 
-        public bool jjLogin(string username, string pwd)
+        public bool checkVerifyCode(string username, bool force)
+        {
+            HttpUtil hu = getHTTPUtil();
+            Random rnd = new Random();
+            string result = hu.Get("http://my.jjwxc.net/login.php?action=checkneedauthnum&" +
+                "r=" + rnd.NextDouble() + "00&username=" + username);
+            Regex regex = new Regex(@"isneed""\s*:\s*true");
+            if (regex.Match(result).Success || force)
+            {
+                cookiestr = "";
+                hu.cookiestr = "";
+                setPrompt("请输入验证码");
+                byte[] img = hu.GetBinary("http://my.jjwxc.net/include/checkImage.php?random=" +
+                    rnd.NextDouble() + "00", "image/webp,image/apng,image/*,*/*;q=0.8");
+                setVerifyCode(img);
+
+                cookiestr = hu.cookiestr;
+                return true;
+            }
+            return false;
+        }
+
+        public bool jjLogin(string username, string pwd, string verifycode)
         {
             setPrompt("正在登陆……");
             HttpUtil hu = getHTTPUtil();
-            string result = hu.Get("http://my.jjwxc.net/login.php?" +
-                "action=login&login_mode=ajax&USEUUID=undefined&loginname="+username+"&loginpassword="+pwd+"&" +
-                "Ekey=&Challenge=&auth_num=&cookietime=1&" +
+
+            String result = hu.Get("http://my.jjwxc.net/login.php?" +
+                "action=login&login_mode=ajax&loginname=" + username + "&loginpassword=" + pwd + "&" +
+                "Ekey=&Challenge=&auth_num=" + verifycode + "&cookietime=1&" +
                 "client_time=" + HttpUtil.getTimeStamp() +
-                "&jsonp=jQuery18004921355885453522_" + HttpUtil.getTimeStamp() + "123" +
+                "&jsonp=jQuery18008677560358499031_" + HttpUtil.getTimeStamp() + "123" +
                 "&_=" + HttpUtil.getTimeStamp() + "123");
+            Regex jsonpRegex = new Regex(@"^[^(]+\((.+)\)$");
+            Match m = jsonpRegex.Match(result);
+
             cookiestr = hu.cookiestr;
-            hasLogin = cookiestr != null && cookiestr.Length > 10;
+            hasLogin = cookiestr != null && cookiestr.IndexOf("token", 0) > -1;
+            if (!m.Success)
+            {
+                setPrompt("登陆响应无法解析");
+                return hasLogin;
+            }
             if (hasLogin)
             {
                 setPrompt("正在获取用户信息……");
                 getUserDetail();
                 writeSavedUser();
                 setPrompt("登陆成功(*￣▽￣)y ");
-            }else
-                setPrompt("登陆失败QAQ", Color.Red);
+            } else
+            {
+                result = m.Groups[1].Captures[0].ToString();
+                JObject jresult = JObject.Parse(result);
+                if(jresult["state"].ToString() == "10")
+                {
+                    checkVerifyCode(username, true);
+                }
+                setPrompt("登陆失败QAQ: " + jresult["message"].ToString(), Color.Red);
+            } 
             return hasLogin;
-            
+
         }
         private void getUserDetail()
         {
@@ -184,15 +239,13 @@ namespace jjget
             string my = hu.Get("http://my.jjwxc.net/backend/userinfo.php");
             HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
             hd.LoadHtml(my);
-            HtmlNode hn;
-            HtmlNodeCollection hnc;
             HtmlNode root = hd.DocumentNode;
             HtmlNode tb = root.SelectSingleNode("//table[@bgcolor='#009900']");
             userDetail = "已登录 ID:" + tb.SelectSingleNode("./tr[1]//font[@class='readerid']").InnerText.Trim();
             string _nick = tb.SelectSingleNode("./tr[2]/td[2]/div").InnerText;
             if (_nick != "您还没有设置昵称")
                 userDetail += " " + _nick;
-            userDetail += " "+tb.SelectSingleNode("./tr[6]//span[@id='clickEmail']").InnerText;
+            userDetail += " "+tb.SelectSingleNode("./tr[7]//div/span").InnerText;
         }
 
         public bool getIndex(int novelid){
@@ -214,7 +267,7 @@ namespace jjget
                 hn = root.SelectSingleNode("//h2");
                 this.name = hn.InnerText.Substring(3);
                 //descriptions
-                hnc = root.SelectNodes("//div[@class='b module']/ul/li");
+                hnc = root.SelectNodes("//div[@class='b module']/ul//li");
                 foreach (HtmlNode n in hnc)
                 {
                     if (n.SelectSingleNode("a") != null && this.author == "")
@@ -239,13 +292,23 @@ namespace jjget
                 this.name = root.SelectSingleNode("//span[@itemprop='articleSection']").InnerText;
                 this.author = root.SelectSingleNode("//span[@itemprop='author']").InnerText;
                 hnc = root.SelectNodes("//ul[@class='rightul']/li");
-                for (int idx=0;idx<6;idx++)
+                for (int idx=0;idx<8;idx++)
                 {
                     HtmlNode n = hnc[idx];
                     this.descriptions += HtmlEntity.DeEntitize(n.InnerText.Replace("\n", "").Replace("\r", "").
-                        Replace(" ", "").Replace(":", "："))+ "\n";
+                        Replace(" ", "").Replace(":", "："));
+                    // 出版信息
+                    var imgs = n.SelectNodes(".//img");
+                    if(imgs != null )
+                    {
+                        foreach (var img in imgs)
+                        {
+                            this.descriptions += img.GetAttributeValue("title", "") + " ";
+                        }
+                    }
+                    this.descriptions += "\n";
                 }
-                this.descriptions += root.SelectSingleNode("//div[@class='smallreadbody']/font").InnerText;
+                this.descriptions += root.SelectSingleNode("//div[@class='smallreadbody']/div[@id='novelintro']").InnerText;
                 HtmlNodeCollection chaps = root.SelectNodes("//table[@class='cytable']/tbody/tr[@itemtype='http://schema.org/Chapter']");
                 this.chapterCount = chaps.Count;
                 foreach (HtmlNode c in chaps)

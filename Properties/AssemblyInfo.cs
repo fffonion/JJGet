@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("jjget")]
 [assembly: AssemblyDescription("晋江下载器")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("fffonion(http://yooooo.us)")]
+[assembly: AssemblyCompany("fffonion(https://yooooo.us)")]
 [assembly: AssemblyProduct("jjget")]
 [assembly: AssemblyCopyright("GPLv3")]
 [assembly: AssemblyTrademark("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // 可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1")]
-[assembly: AssemblyFileVersion("1.1")]
+[assembly: AssemblyVersion("1.2")]
+[assembly: AssemblyFileVersion("1.2")]

@@ -23,10 +23,6 @@ namespace jjget
             this.encoding = encoding;
         }
 
-        public string Get(string url)
-        {
-            return Get(url, null);
-        }
         private Stream getStream(HttpWebResponse resp, int timeout)
         {
             Stream stream;
@@ -46,7 +42,8 @@ namespace jjget
             }
             return stream;
         }
-        public string Get(string url, string referer)
+
+        private Stream get(string url, string referer, string accept)
         {
             HttpWebRequest request;
             Encoding encoding = Encoding.Default;
@@ -55,30 +52,63 @@ namespace jjget
             request.Method = "get";
             request.Timeout = 12345;
             //request.CookieContainer = new CookieContainer();
-            if (proxy!=null)
+            if (proxy != null)
                 request.Proxy = proxy;
             request.Headers.Add("Accept-encoding:gzip,deflate");
             if (cookiestr != "")
                 request.Headers.Add("Cookie:" + cookiestr);
             if (referer != null)
                 request.Referer = referer;
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+            if (accept == null)
+                accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+            request.Accept = accept;
             request.UserAgent = "Mozilla/5.0 (Linux; U; Android 4.4.2; zh-CN; JJGET) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 UCBrowser/9.7.5.418 U3/0.8.0 Mobile Safari/533.1";
             HttpWebResponse resp = (HttpWebResponse)request.GetResponse();
             string set_cookie = resp.Headers["set-cookie"];
-            if (set_cookie!=null && set_cookie.IndexOf(",") != -1)
+            if (set_cookie != null && set_cookie.IndexOf(",") != -1)
             {
                 cookiestr = "testcookie=yes;";
                 foreach (string l in set_cookie.Split(','))
                 {
-                    if (l.Split(';')[0].IndexOf("=") == -1) continue;
+                    if (l.Split(';')[0].IndexOf("=") == -1 || l.Split(';')[0].IndexOf("deleted") != -1) continue;
                     cookiestr += l.Split(';')[0] + ";";
                 }
             }
-            Stream respStream = getStream(resp, 10000);
+            return getStream(resp, 10000);
+        }
+
+        public string Get(string url)
+        {
+            return Get(url, null);
+        }
+        public string Get(string url, string referer) {
+            Stream respStream = get(url, referer, null);
             using (System.IO.StreamReader reader = new System.IO.StreamReader(respStream, Encoding.GetEncoding(this.encoding)))
             {
                 return reader.ReadToEnd();
+            }
+        }
+
+        public byte[] GetBinary(string url, string accept)
+        {
+            Stream respStream = get(url, null, accept);
+            try
+            {
+                int bytesBuffer = 1024;
+                byte[] buffer = new byte[bytesBuffer];
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    int readBytes;
+                    while ((readBytes = respStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        ms.Write(buffer, 0, readBytes);
+                    }
+                    return ms.ToArray();
+                }
+            }
+            catch (Exception)
+            {
+                return new byte[0];
             }
         }
         public static int getTimeStamp(){

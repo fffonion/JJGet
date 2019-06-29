@@ -68,7 +68,7 @@
             this.linkLabel1.Size = new System.Drawing.Size(304, 18);
             this.linkLabel1.TabIndex = 2;
             this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "http://git.oschina.net/fffonion/JJGet";
+            this.linkLabel1.Text = "https://gitee.com/fffonion/JJGet";
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // label3

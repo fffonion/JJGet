@@ -23,9 +23,11 @@ namespace jjget
         public frmMain()
         {
             novel = new Novel();
-            novel.setDelegate(this.setPrompt);
+            novel.registerSetProgressDelegate(this.setPrompt);
+            novel.registerSetVerifyCodeDelegate(this.setVerifyCode);
             InitializeComponent();
             res = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
+            picVerifyCode.BringToFront();
         }
 
         private void setProgressBar(float prog)
@@ -79,9 +81,32 @@ namespace jjget
             ));
         }
 
+        private void setVerifyCode(byte[] text)
+        {
+            this.Invoke(new Action(() => {
+                txtVerifyCode.Text = "";
+                if (text.Length == 0)
+                {
+                    picProgress.Image = null;
+                    txtVerifyCode.Enabled = false;
+                }
+                else
+                {
+                    txtVerifyCode.Visible = true;
+                    txtVerifyCode.Enabled = true;
+                    MemoryStream m = new MemoryStream(text);
+                    picVerifyCode.Image = Image.FromStream(m);
+                    m.Dispose();
+                }
+               
+            }
+            ));
+        }
+
+
         private void updateNovelSettings()
         {
-            novel.setDelegate(this.setPrompt);
+            novel.registerSetProgressDelegate(this.setPrompt);
             novel.setUseMobile(chkUseMobileEdition.Checked);
             if (!chkUseProxy.Checked)
                 return;
@@ -116,7 +141,8 @@ namespace jjget
                 return;
             }
             grpBookInfo.Text = novel.name;
-            label2.Text = novel.descriptions; 
+            label2.Text = novel.descriptions;
+            toolTip1.SetToolTip(label2, label2.Text);
             lblAuthor.Text = novel.author;
             lblChapterCnt.Text = novel.chapterCount.ToString();
             lblCntDone.Text = novel.chapterDone.ToString();
@@ -246,7 +272,7 @@ namespace jjget
             Program.SetCueText(txtNovelID, "输入NovelID");
             Program.SetCueText(txtProxyServ, "代理IP");
             Program.SetCueText(txtProxyPort, "代理端口");
-            lblLoginInfo.Size = new Size(417, 27);
+            lblLoginInfo.Size = new Size(417, 74);
             lblLoginInfo.Location = new Point(label8.Location.X+3, lblLoginInfo.Location.Y);
             loginRoutine(true);
             //lblLoginInfo.Visible = true;
@@ -276,6 +302,8 @@ namespace jjget
                 lblLoginInfo.Text = novel.userDetail;
                 btnLogin.Text = "退出";
                 btnLogin.Enabled = true;
+                picVerifyCode.Image = null;
+                txtVerifyCode.Text = "";
             });
             if (novel.hasLogin)
             {
@@ -284,7 +312,7 @@ namespace jjget
             }
             if (isCheck)//check only
                 return false;
-            if (novel.jjLogin(txtUsername.Text, txtPwd.Text))
+            if (novel.jjLogin(txtUsername.Text, txtPwd.Text, txtVerifyCode.Text))
             {
                 this.Invoke(setctls);
                 return true;
@@ -344,9 +372,11 @@ namespace jjget
             System.Diagnostics.Process.Start(txtSaveLoc.Text);
         }
 
-
-
-
-
+        private void txtUsername_Leave(object sender, EventArgs e)
+        {
+            new Thread(new ThreadStart(() =>
+                novel.checkVerifyCode(txtUsername.Text, false)
+            )).Start();
+        }
     }
 }
