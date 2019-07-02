@@ -369,7 +369,7 @@ namespace jjget
                 HtmlNode hn2 = root.SelectSingleNode("//div[@class='readsmall']");
                 chpt.content = parseText_Img_Link(hn2);
                 //内容
-                List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img").ToList();
+                List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img|./script").ToList();
                 foreach(HtmlNode hn in hnl){
                     novelnode.RemoveChild(hn);
                 }
