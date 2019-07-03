@@ -375,7 +375,7 @@ namespace jjget
                 }
                 chpt.content = "　　" + HtmlEntity.DeEntitize(
                         novelnode.InnerHtml.Replace("<br>","\r\n").Replace("</br>","\r\n"))
-                    .Replace("@无限好文，尽晋江文学城","").Trim() +  chpt.content;
+                    .Replace("@无限好文，尽在晋江文学城", "").Replace("@无限好文，尽晋江文学城","").Trim() +  chpt.content;
                 
                 
             }
