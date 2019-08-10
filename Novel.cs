@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using System.Net;
 using System.Drawing;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace jjget
 {
@@ -28,7 +26,7 @@ namespace jjget
         public string userDetail;
         public bool hasLogin = false;
         private WebProxy proxy = null;
-        private Action<String, Color> setProgressDelegate;
+        private Action<string, Color> setProgressDelegate;
         private Action<byte[]> setVerifyCodeDelegate;
         private List<int> vipChapters = new List<int>();
         public struct Chapter
@@ -182,7 +180,6 @@ namespace jjget
             {
                 cookiestr = "";
                 hu.cookiestr = "";
-                setPrompt("请输入验证码");
                 byte[] img = hu.GetBinary("http://my.jjwxc.net/include/checkImage.php?random=" +
                     rnd.NextDouble() + "00", "image/webp,image/apng,image/*,*/*;q=0.8");
                 setVerifyCode(img);
@@ -198,7 +195,7 @@ namespace jjget
             setPrompt("正在登陆……");
             HttpUtil hu = getHTTPUtil();
 
-            String result = hu.Get("http://my.jjwxc.net/login.php?" +
+            string result = hu.Get("http://my.jjwxc.net/login.php?" +
                 "action=login&login_mode=ajax&loginname=" + username + "&loginpassword=" + pwd + "&" +
                 "Ekey=&Challenge=&auth_num=" + verifycode + "&cookietime=1&" +
                 "client_time=" + HttpUtil.getTimeStamp() +
@@ -209,35 +206,38 @@ namespace jjget
 
             cookiestr = hu.cookiestr;
             hasLogin = cookiestr != null && cookiestr.IndexOf("token", 0) > -1;
-            if (!m.Success)
-            {
-                setPrompt("登陆响应无法解析");
-                return hasLogin;
-            }
             if (hasLogin)
             {
                 setPrompt("正在获取用户信息……");
                 getUserDetail();
                 writeSavedUser();
                 setPrompt("登陆成功(*￣▽￣)y ");
-            } else
+                return true;
+            }
+            if (!m.Success)
+            {
+                setPrompt("登陆响应无法解析，试试用邮箱登陆？ " + result);
+            }
+            else
             {
                 result = m.Groups[1].Captures[0].ToString();
                 JObject jresult = JObject.Parse(result);
-                if(jresult["state"].ToString() == "10")
+                if (jresult["state"].ToString() == "10")
                 {
                     checkVerifyCode(username, true);
                 }
                 setPrompt("登陆失败QAQ: " + jresult["message"].ToString(), Color.Red);
-            } 
-            return hasLogin;
+
+            }
+
+            return false;
 
         }
         private void getUserDetail()
         {
             HttpUtil hu = getHTTPUtil();
             string my = hu.Get("http://my.jjwxc.net/backend/userinfo.php");
-            HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
+            HtmlDocument hd = new HtmlDocument();
             hd.LoadHtml(my);
             HtmlNode root = hd.DocumentNode;
             HtmlNode tb = root.SelectSingleNode("//table[@bgcolor='#009900']");

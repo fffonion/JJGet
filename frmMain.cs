@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading;
-using HtmlAgilityPack;
 
 namespace jjget
 {
@@ -26,7 +21,7 @@ namespace jjget
             novel.registerSetProgressDelegate(this.setPrompt);
             novel.registerSetVerifyCodeDelegate(this.setVerifyCode);
             InitializeComponent();
-            res = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
+            res = new ComponentResourceManager(typeof(frmMain));
             picVerifyCode.BringToFront();
         }
 
@@ -43,10 +38,10 @@ namespace jjget
             while (cnt > progboxes.Count && cnt<=7)
             {
                 PictureBox pb = new PictureBox();
-                pb.Image = ((System.Drawing.Image)(res.GetObject("picProgress.Image")));
-                pb.Location = new System.Drawing.Point(12 + (1 + progboxes.Count) * 53, picProgress.Location.Y);
-                pb.Size = new System.Drawing.Size(53, 65);
-                pb.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+                pb.Image = (Image)res.GetObject("picProgress.Image");
+                pb.Location = new Point(12 + (1 + progboxes.Count) * 53, picProgress.Location.Y);
+                pb.Size = new Size(53, 65);
+                pb.SizeMode = PictureBoxSizeMode.Zoom;
                 progboxes.Add(pb);
                 this.Controls.Add(pb);
                 lblProgBar.Location = new Point(68 + cnt * 53, lblProgBar.Location.Y);
@@ -340,7 +335,11 @@ namespace jjget
                 new Thread(new ThreadStart(() =>
                 {
                     if (!loginRoutine(false))
+                    {
                         MessageBox.Show("登录失败！", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        // reset verify code
+                        novel.checkVerifyCode(txtUsername.Text, false);
+                    }
                     this.Invoke(new Action(() => btnLogin.Enabled = true));
                 })).Start();
             }else
@@ -374,9 +373,27 @@ namespace jjget
 
         private void txtUsername_Leave(object sender, EventArgs e)
         {
-            new Thread(new ThreadStart(() =>
-                novel.checkVerifyCode(txtUsername.Text, false)
-            )).Start();
+            new Thread(new ThreadStart(() => {
+                this.Invoke(new Action(() => btnLogin.Enabled = false));
+                novel.checkVerifyCode(txtUsername.Text, false);
+                this.Invoke(new Action(() => btnLogin.Enabled = true));
+            })).Start();
+        }
+
+        private void LblPromptU_Click(object sender, EventArgs e)
+        {
+            if(lblPromptU.Text!= "")
+            {
+                MessageBox.Show(lblPromptU.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+        }
+
+        private void LblPromptD_Click(object sender, EventArgs e)
+        {
+            if (lblPromptD.Text != "")
+            {
+                MessageBox.Show(lblPromptD.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
         }
     }
 }

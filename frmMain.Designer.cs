@@ -43,10 +43,10 @@
             this.txtSaveLoc = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.grpConfig = new System.Windows.Forms.GroupBox();
+            this.lblLoginInfo = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.btnOpenDir = new System.Windows.Forms.Button();
             this.btnLogin = new System.Windows.Forms.Button();
-            this.lblLoginInfo = new System.Windows.Forms.Label();
             this.chkUsePwdMask = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
             this.txtPwd = new System.Windows.Forms.TextBox();
@@ -230,6 +230,15 @@
             this.grpConfig.TabStop = false;
             this.grpConfig.Text = "设置";
             // 
+            // lblLoginInfo
+            // 
+            this.lblLoginInfo.Location = new System.Drawing.Point(353, 153);
+            this.lblLoginInfo.Name = "lblLoginInfo";
+            this.lblLoginInfo.Size = new System.Drawing.Size(75, 74);
+            this.lblLoginInfo.TabIndex = 18;
+            this.lblLoginInfo.Text = "登陆信息";
+            this.lblLoginInfo.Visible = false;
+            // 
             // label9
             // 
             this.label9.AutoSize = true;
@@ -258,15 +267,6 @@
             this.btnLogin.Text = "登陆";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-            // 
-            // lblLoginInfo
-            // 
-            this.lblLoginInfo.Location = new System.Drawing.Point(353, 153);
-            this.lblLoginInfo.Name = "lblLoginInfo";
-            this.lblLoginInfo.Size = new System.Drawing.Size(75, 74);
-            this.lblLoginInfo.TabIndex = 18;
-            this.lblLoginInfo.Text = "登陆信息";
-            this.lblLoginInfo.Visible = false;
             // 
             // chkUsePwdMask
             // 
@@ -396,6 +396,7 @@
             this.lblPromptD.Name = "lblPromptD";
             this.lblPromptD.Size = new System.Drawing.Size(424, 28);
             this.lblPromptD.TabIndex = 8;
+            this.lblPromptD.Click += new System.EventHandler(this.LblPromptD_Click);
             // 
             // label5
             // 
@@ -452,6 +453,7 @@
             this.lblPromptU.Name = "lblPromptU";
             this.lblPromptU.Size = new System.Drawing.Size(424, 28);
             this.lblPromptU.TabIndex = 14;
+            this.lblPromptU.Click += new System.EventHandler(this.LblPromptU_Click);
             // 
             // toolTip1
             // 
