@@ -182,7 +182,7 @@ namespace jjget
                 hu.cookiestr = "";
                 byte[] img = hu.GetBinary("http://my.jjwxc.net/include/checkImage.php?random=" +
                     rnd.NextDouble() + "00", "image/webp,image/apng,image/*,*/*;q=0.8");
-                setVerifyCode(img);
+                this.setVerifyCode(img);
 
                 cookiestr = hu.cookiestr;
                 return true;
@@ -241,11 +241,18 @@ namespace jjget
             hd.LoadHtml(my);
             HtmlNode root = hd.DocumentNode;
             HtmlNode tb = root.SelectSingleNode("//table[@bgcolor='#009900']");
-            userDetail = "已登录 ID:" + tb.SelectSingleNode("./tr[1]//font[@class='readerid']").InnerText.Trim();
-            string _nick = tb.SelectSingleNode("./tr[2]/td[2]/div").InnerText;
+            bool isWriter = false;
+            var detailTr = tb.SelectSingleNode("./tr[1]//font[@class='readerid']");
+            if (detailTr == null)
+            {
+                detailTr = tb.SelectSingleNode("./tr[1]//div[1]");
+                isWriter = true;
+            }
+            userDetail = "已登录 ID: " + detailTr.InnerText.Trim();
+            string _nick = tb.SelectSingleNode("./tr[" + (isWriter? "3" : "2") + "]/td[2]/div").InnerText;
             if (_nick != "您还没有设置昵称")
                 userDetail += " " + _nick;
-            userDetail += " "+tb.SelectSingleNode("./tr[7]//div/span").InnerText;
+            userDetail += " "+tb.SelectSingleNode("./tr[" + (isWriter ? "8" : "7") + "]//div/span").InnerText;
         }
 
         public bool getIndex(int novelid){
