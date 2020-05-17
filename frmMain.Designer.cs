@@ -141,7 +141,7 @@
             this.lblAuthor.Name = "lblAuthor";
             this.lblAuthor.Size = new System.Drawing.Size(44, 17);
             this.lblAuthor.TabIndex = 2;
-            this.lblAuthor.Text = "深井冰";
+            this.lblAuthor.Text = "某太太";
             // 
             // label2
             // 

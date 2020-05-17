@@ -148,12 +148,11 @@
     <Error Condition="!Exists('..\packages\ILMerge.3.0.29\build\ILMerge.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILMerge.3.0.29\build\ILMerge.props'))" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="ILMerge" Version="3.0.17" />
+    <PackageReference Include="ILMerge" Version="3.0.29" />
   </ItemGroup>
-
   <Target Name="ILMerge">
     <!-- the ILMergePath property points to the location of ILMerge.exe console application -->
-    <Exec Command="$(ILMergeConsolePath) bin\SingleFile\jjget.exe  /out:jjget.exe bin\SingleFile\HtmlAgilityPack.dll bin\SingleFile\Newtonsoft.Json.dll" />
+    <Exec Command="$(ILMergeConsolePath) bin\Release\jjget.exe  /out:jjget.exe bin\Release\HtmlAgilityPack.dll bin\Release\Newtonsoft.Json.dll" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

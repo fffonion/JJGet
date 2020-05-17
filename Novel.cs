@@ -397,13 +397,16 @@ namespace jjget
             return vipChapters.IndexOf(chptindx) != -1;
         }
 
+        Regex legalPath = new Regex(@"[|:?\\/*'<>]|\.+(?:$)");
         public void saveChapter(Chapter chpt, bool split)
         {
             string savepath;
+            var legalName = legalPath.Replace(this.name, "_", -1);
             if (split)
-                savepath = this.savePath + "\\" + this.name + "-" + chpt.chapterIndex.ToString("D3") + ".txt";
+                savepath = this.savePath + "\\" + legalName + "-" + chpt.chapterIndex.ToString("D3") + ".txt";
             else
-                savepath = this.savePath + "\\" + this.name + ".txt";
+                savepath = this.savePath + "\\" + legalName + ".txt";
+
             FileStream fs = new FileStream(savepath, FileMode.Append, FileAccess.Write);
             StreamWriter sw = new StreamWriter(fs);
             sw.WriteLine(chpt.ToString() + "\r\n");
@@ -414,7 +417,8 @@ namespace jjget
         }
         private void saveProgress(int chpt)
         {
-            string savepath = this.savePath + "\\" + this.name + ".jjget";
+            var legalName = legalPath.Replace(this.name, "_", -1);
+            string savepath = this.savePath + "\\" + legalName + ".jjget";
             FileStream fs = new FileStream(savepath, FileMode.Create, FileAccess.Write);
             StreamWriter sw = new StreamWriter(fs);
             sw.Write(chpt.ToString());
