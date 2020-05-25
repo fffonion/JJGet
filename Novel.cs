@@ -255,6 +255,12 @@ namespace jjget
             userDetail += " "+tb.SelectSingleNode("./tr[" + (isWriter ? "8" : "7") + "]//div/span").InnerText;
         }
 
+        private string stripEmpty(string input)
+        {
+            return input.Replace("\n", "").Replace("\r", "").
+                        Replace(" ", "");
+        }
+
         public bool getIndex(int novelid){
             this.novelid = novelid;
             setPrompt("下载首页中……", Color.Orange);
@@ -282,8 +288,7 @@ namespace jjget
                         this.author = hnc[0].SelectSingleNode("a").InnerText;
                         continue;
                     }
-                    this.descriptions += n.InnerText.Replace("\n", "").Replace("\r", "").
-                        Replace(" ", "").Replace(":", "：") + "\n";
+                    this.descriptions += stripEmpty(n.InnerText).Replace(":", "：") + "\n";
                 }
                 //chapters
                 HtmlNodeCollection chaps = root.SelectNodes("//div[@style='padding-left:10px']/a");
@@ -296,8 +301,18 @@ namespace jjget
             }
             else 
             {
-                this.name = root.SelectSingleNode("//span[@itemprop='articleSection']").InnerText;
-                this.author = root.SelectSingleNode("//span[@itemprop='author']").InnerText;
+                var nameElem = root.SelectSingleNode("//span[@itemprop='articleSection']");
+                if (nameElem == null)
+                {
+                    nameElem = root.SelectSingleNode("//span[@class='bigtext']");
+                }
+                this.name = stripEmpty(nameElem.InnerText);
+                var authorElem = root.SelectSingleNode("//span[@itemprop='author']");
+                if(authorElem == null)
+                {
+                    authorElem = root.SelectSingleNode("//td[@class='noveltitle']/a");
+                }
+                this.author = authorElem.InnerText;
                 hnc = root.SelectNodes("//ul[@class='rightul']/li");
                 for (int idx=0;idx<8;idx++)
                 {
@@ -317,13 +332,19 @@ namespace jjget
                 }
                 this.descriptions += root.SelectSingleNode("//div[@class='smallreadbody']/div[@id='novelintro']").InnerText;
                 HtmlNodeCollection chaps = root.SelectNodes("//table[@class='cytable']/tbody/tr[@itemtype='http://schema.org/Chapter']");
-                this.chapterCount = chaps.Count;
-                foreach (HtmlNode c in chaps)
+                if(chaps != null)
                 {
-                    if (c.InnerHtml.IndexOf("onebook_vip") != -1)
-                        vipChapters.Add(int.Parse(c.SelectSingleNode("./td[1]").InnerText.Trim()));
+                    foreach (HtmlNode c in chaps)
+                    {
+                        if (c.InnerHtml.IndexOf("onebook_vip") != -1)
+                            vipChapters.Add(int.Parse(c.SelectSingleNode("./td[1]").InnerText.Trim()));
+                    }
+                    this.chapterCount = chaps.Count;
+                } else
+                {
+                    // 没有独立章节
+                    this.chapterCount = 1;
                 }
-                this.chapterCount = chaps.Count;
             }
             isFinnished = descriptions.IndexOf("连载中") == -1;
             setPrompt("首页分析完成，可以开始了");
@@ -409,6 +430,10 @@ namespace jjget
 
             FileStream fs = new FileStream(savepath, FileMode.Append, FileAccess.Write);
             StreamWriter sw = new StreamWriter(fs);
+            if(chpt.chapterIndex == 1)
+            {
+                sw.WriteLine(this.descriptions + "\r\n");
+            }
             sw.WriteLine(chpt.ToString() + "\r\n");
             sw.Close();
             fs.Close();
