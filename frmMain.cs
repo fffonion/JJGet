@@ -66,13 +66,16 @@ namespace jjget
         private void setPrompt(string text, Color c)
         {
             this.Invoke(new Action(() => {
-                    lblPromptU.Text = lblPromptD.Text;
-                    lblPromptU.ForeColor = lblPromptD.ForeColor;
+                    lblPromptU.Text = lblPromptM.Text;
+                    lblPromptU.ForeColor = lblPromptM.ForeColor;
+                    lblPromptM.Text = lblPromptD.Text;
+                    lblPromptM.ForeColor = lblPromptD.ForeColor;
                     lblPromptD.Text = text;
                     lblPromptD.ForeColor = c;
                     toolTip1.SetToolTip(lblPromptU, lblPromptU.Text);
+                    toolTip1.SetToolTip(lblPromptM, lblPromptM.Text);
                     toolTip1.SetToolTip(lblPromptD, lblPromptD.Text);
-                }
+            }
             ));
         }
 
@@ -390,9 +393,9 @@ namespace jjget
 
         private void LblPromptD_Click(object sender, EventArgs e)
         {
-            if (lblPromptD.Text != "")
+            if (lblPromptM.Text != "")
             {
-                MessageBox.Show(lblPromptD.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(lblPromptM.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
     }

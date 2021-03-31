@@ -43,14 +43,14 @@ namespace jjget
             return stream;
         }
 
-        private Stream get(string url, string referer, string accept)
+        private Stream get(string url, string referer, string accept, bool ignoreSetCookie)
         {
             HttpWebRequest request;
             Encoding encoding = Encoding.Default;
             request = (HttpWebRequest)HttpWebRequest.Create(url);
             request.KeepAlive = true;
             request.Method = "get";
-            request.Timeout = 12345;
+            request.Timeout = 45000; // 45s
             //request.CookieContainer = new CookieContainer();
             if (proxy != null)
                 request.Proxy = proxy;
@@ -65,7 +65,7 @@ namespace jjget
             request.UserAgent = "Mozilla/5.0 (Linux; U; Android 4.4.2; zh-CN; JJGET) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 UCBrowser/9.7.5.418 U3/0.8.0 Mobile Safari/533.1";
             HttpWebResponse resp = (HttpWebResponse)request.GetResponse();
             string set_cookie = resp.Headers["set-cookie"];
-            if (set_cookie != null && set_cookie.IndexOf(",") != -1)
+            if (set_cookie != null && set_cookie.IndexOf(",") != -1 && !ignoreSetCookie)
             {
                 cookiestr = "testcookie=yes;";
                 foreach (string l in set_cookie.Split(','))
@@ -79,10 +79,15 @@ namespace jjget
 
         public string Get(string url)
         {
-            return Get(url, null);
+            return Get(url, null, false);
         }
-        public string Get(string url, string referer) {
-            Stream respStream = get(url, referer, null);
+
+        public string Get(string url, string referer)
+        {
+            return Get(url, referer, false);
+        }
+        public string Get(string url, string referer, bool ignoreSetCookie) {
+            Stream respStream = get(url, referer, null, ignoreSetCookie);
             using (System.IO.StreamReader reader = new System.IO.StreamReader(respStream, Encoding.GetEncoding(this.encoding)))
             {
                 return reader.ReadToEnd();
@@ -91,7 +96,7 @@ namespace jjget
 
         public byte[] GetBinary(string url, string accept)
         {
-            Stream respStream = get(url, null, accept);
+            Stream respStream = get(url, null, accept, false);
             try
             {
                 int bytesBuffer = 1024;

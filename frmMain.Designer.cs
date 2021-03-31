@@ -60,7 +60,7 @@
             this.chkSplitChapter = new System.Windows.Forms.CheckBox();
             this.picVerifyCode = new System.Windows.Forms.PictureBox();
             this.txtVerifyCode = new System.Windows.Forms.TextBox();
-            this.lblPromptD = new System.Windows.Forms.Label();
+            this.lblPromptM = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.lblCntDone = new System.Windows.Forms.Label();
             this.picProgress = new System.Windows.Forms.PictureBox();
@@ -70,6 +70,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.lblPromptD = new System.Windows.Forms.Label();
             this.grpBookInfo.SuspendLayout();
             this.grpConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picVerifyCode)).BeginInit();
@@ -223,7 +224,7 @@
             this.grpConfig.Controls.Add(this.txtSaveLoc);
             this.grpConfig.Controls.Add(this.picVerifyCode);
             this.grpConfig.Controls.Add(this.txtVerifyCode);
-            this.grpConfig.Location = new System.Drawing.Point(17, 366);
+            this.grpConfig.Location = new System.Drawing.Point(17, 387);
             this.grpConfig.Name = "grpConfig";
             this.grpConfig.Size = new System.Drawing.Size(437, 240);
             this.grpConfig.TabIndex = 7;
@@ -388,15 +389,15 @@
             this.txtVerifyCode.Size = new System.Drawing.Size(139, 23);
             this.txtVerifyCode.TabIndex = 22;
             // 
-            // lblPromptD
+            // lblPromptM
             // 
-            this.lblPromptD.AutoEllipsis = true;
-            this.lblPromptD.ForeColor = System.Drawing.Color.DarkGreen;
-            this.lblPromptD.Location = new System.Drawing.Point(24, 262);
-            this.lblPromptD.Name = "lblPromptD";
-            this.lblPromptD.Size = new System.Drawing.Size(424, 28);
-            this.lblPromptD.TabIndex = 8;
-            this.lblPromptD.Click += new System.EventHandler(this.LblPromptD_Click);
+            this.lblPromptM.AutoEllipsis = true;
+            this.lblPromptM.ForeColor = System.Drawing.Color.DarkGreen;
+            this.lblPromptM.Location = new System.Drawing.Point(24, 262);
+            this.lblPromptM.Name = "lblPromptM";
+            this.lblPromptM.Size = new System.Drawing.Size(424, 28);
+            this.lblPromptM.TabIndex = 8;
+            this.lblPromptM.Click += new System.EventHandler(this.LblPromptD_Click);
             // 
             // label5
             // 
@@ -419,7 +420,7 @@
             // picProgress
             // 
             this.picProgress.Image = ((System.Drawing.Image)(resources.GetObject("picProgress.Image")));
-            this.picProgress.Location = new System.Drawing.Point(13, 297);
+            this.picProgress.Location = new System.Drawing.Point(13, 318);
             this.picProgress.Name = "picProgress";
             this.picProgress.Size = new System.Drawing.Size(53, 65);
             this.picProgress.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -431,7 +432,7 @@
             // 
             this.lblProgBar.AutoSize = true;
             this.lblProgBar.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblProgBar.Location = new System.Drawing.Point(69, 342);
+            this.lblProgBar.Location = new System.Drawing.Point(69, 363);
             this.lblProgBar.Name = "lblProgBar";
             this.lblProgBar.Size = new System.Drawing.Size(21, 14);
             this.lblProgBar.TabIndex = 12;
@@ -487,11 +488,21 @@
             this.linkLabel2.VisitedLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
+            // lblPromptD
+            // 
+            this.lblPromptD.AutoEllipsis = true;
+            this.lblPromptD.ForeColor = System.Drawing.Color.DarkGreen;
+            this.lblPromptD.Location = new System.Drawing.Point(24, 290);
+            this.lblPromptD.Name = "lblPromptD";
+            this.lblPromptD.Size = new System.Drawing.Size(424, 28);
+            this.lblPromptD.TabIndex = 17;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(467, 620);
+            this.ClientSize = new System.Drawing.Size(467, 640);
+            this.Controls.Add(this.lblPromptD);
             this.Controls.Add(this.linkLabel2);
             this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.lblPromptU);
@@ -500,7 +511,7 @@
             this.Controls.Add(this.picProgress);
             this.Controls.Add(this.lblCntDone);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.lblPromptD);
+            this.Controls.Add(this.lblPromptM);
             this.Controls.Add(this.grpConfig);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.grpBookInfo);
@@ -539,7 +550,7 @@
         private System.Windows.Forms.TextBox txtSaveLoc;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.GroupBox grpConfig;
-        private System.Windows.Forms.Label lblPromptD;
+        private System.Windows.Forms.Label lblPromptM;
         private System.Windows.Forms.CheckBox chkSplitChapter;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label lblCntDone;
@@ -567,6 +578,7 @@
         private System.Windows.Forms.PictureBox picVerifyCode;
         private System.Windows.Forms.TextBox txtVerifyCode;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label lblPromptD;
     }
 }
 

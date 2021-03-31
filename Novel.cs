@@ -29,6 +29,7 @@ namespace jjget
         private Action<string, Color> setProgressDelegate;
         private Action<byte[]> setVerifyCodeDelegate;
         private List<int> vipChapters = new List<int>();
+        private FontDecoder fontDecoder = new FontDecoder();
         public struct Chapter
         {
             public int chapterIndex;
@@ -56,6 +57,8 @@ namespace jjget
         public void registerSetProgressDelegate(Action<String, Color> d)
         {
             this.setProgressDelegate = d;
+
+            this.fontDecoder.registerSetProgressDelegate(d);
         }
 
         private void setPrompt(string text)
@@ -167,6 +170,11 @@ namespace jjget
                 }
             }
             return "\r\n" + result.Replace("<br>", "\r\n").Replace("</br>", "\r\n").Trim();
+        }
+
+        private string decodeCustomFont(string ct, string fontName)
+        {
+            return fontDecoder.Decode(ct, fontName);
         }
 
         public bool checkVerifyCode(string username, bool force)
@@ -369,7 +377,8 @@ namespace jjget
             }
             HttpUtil hu = getHTTPUtil();
             setPrompt("章节" + chapter + (isVip?"[VIP]":"") + "下载中……", Color.Orange);
-            string html = hu.Get(getChapterURL(chapter, isVip), getNovelURL());
+            // VIP章节忽略返回的cookie，好像是假的
+            string html = hu.Get(getChapterURL(chapter, isVip), getNovelURL(), isVip);
             //StreamReader sFile = new StreamReader("z://.txt", Encoding.GetEncoding("gb2312"));
             //string html = sFile.ReadToEnd();
             //setPrompt("分析中……", Color.Orange);
@@ -391,7 +400,16 @@ namespace jjget
             }
             else
             {
-                HtmlNode novelnode = root.SelectSingleNode("//div[@class='noveltext']");
+                HtmlNode novelnode = root.SelectSingleNode("//div[contains(@class,'noveltext')]");
+                //自定义字体
+                string fontName = "";
+                foreach (string cls in novelnode.GetClasses())
+                {
+                    if (cls.StartsWith("jjwxcfont_"))
+                    {
+                        fontName = cls;
+                    }
+                }
                 chpt.title = novelnode.SelectSingleNode("./div/h2").InnerText;
                 //作者的话
                 HtmlNode hn2 = root.SelectSingleNode("//div[@class='readsmall']");
@@ -401,9 +419,15 @@ namespace jjget
                 foreach(HtmlNode hn in hnl){
                     novelnode.RemoveChild(hn);
                 }
-                chpt.content = "　　" + HtmlEntity.DeEntitize(
-                        novelnode.InnerHtml.Replace("<br>","\r\n").Replace("</br>","\r\n"))
-                    .Replace("@无限好文，尽在晋江文学城", "").Replace("@无限好文，尽晋江文学城","").Trim() +  chpt.content;
+                var mainbody = HtmlEntity.DeEntitize(
+                    novelnode.InnerHtml.Replace("<br>", "\r\n").Replace("</br>", "\r\n"));
+                if (fontName != "")
+                {
+                    mainbody = decodeCustomFont(mainbody, fontName);
+                }
+                chpt.content = "　　" +
+                    mainbody.Replace("@无限好文，尽在晋江文学城", "").Replace("@无限好文，尽晋江文学城","").Trim() + 
+                    chpt.content;
                 
                 
             }
