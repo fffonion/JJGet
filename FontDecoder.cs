@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using Newtonsoft.Json;
 
 namespace jjget
@@ -38,7 +39,7 @@ namespace jjget
         {
             if (!map.ContainsKey(fontName))
             {
-                setPrompt("下载字体" + fontName + "(已有" + this.map.Count + ")");
+                setPrompt("下载字体" + fontName + "(已有" + this.map.Count + ")......");
                 this.loadFont(fontName);
             }
             var lookup = this.map[fontName];
@@ -62,7 +63,7 @@ namespace jjget
             {
                 try
                 {
-                    ct = hu.Get("https://jjwxc.yooooo.us/" + fontName + ".json");
+                    ct = hu.Get("https://jjwxc.yooooo.us/" + fontName + ".json?version=" + Application.ProductVersion);
                 }catch(Exception ex)
                 {
                     setPrompt("字体下载失败" + ex.ToString(), Color.Orange);
@@ -79,7 +80,11 @@ namespace jjget
             }
             this.map[fontName] = r.data;
 
-            this.saveMappings();
+            // only cache if response count is expected
+            if (r.data.Count == 200)
+            {
+                this.saveMappings();
+            }
         }
 
         private void loadMappings()

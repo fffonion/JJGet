@@ -79,12 +79,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.12.0.2\lib\net35\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="HtmlAgilityPack">
-      <HintPath>packages\HtmlAgilityPack.1.11.8\lib\Net35\HtmlAgilityPack.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FontDecoder.cs" />
@@ -148,7 +142,7 @@
     <PackageReference Include="HtmlAgilityPack">
       <Version>1.11.32</Version>
     </PackageReference>
-    <PackageReference Include="ILMerge" Version="3.0.29" />
+    <PackageReference Include="ILMerge" Version="3.0.41" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
@@ -160,4 +154,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+    <Target Name="ILMerge">
+    <!-- the ILMergePath property points to the location of ILMerge.exe console application -->
+    <Exec Command="$(ILMergeConsolePath) /out:bin\Release\jjget-merged.exe bin\Release\jjget.exe bin\Release\HtmlAgilityPack.dll bin\Release\Newtonsoft.Json.dll" />
+  </Target>
 </Project>

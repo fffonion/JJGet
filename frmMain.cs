@@ -184,7 +184,7 @@ namespace jjget
                         {
                             if(novel.isVipChapter(i))
                                 setPrompt(("章节" + i + "是VIP章节，"+ 
-                                    (novel.hasLogin?"账号没有购买，或者登陆过期":"需要登录后才能下载")), Color.Red);
+                                    (novel.hasLogin?"可能是账号没有购买，或者登陆过期；请尝试稍后重试":"需要登录后才能下载")), Color.Red);
                             else
                                 MessageBox.Show("处理章节" + i + "时正则匹配失败，请联系作者", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             terminate = true;
