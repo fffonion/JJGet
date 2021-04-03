@@ -34,7 +34,7 @@ def load_existing_result():
     if os.path.exists("fast_compare.json"):
         with open("fast_compare.json") as f:
            use_font, max_agreed, known_chars, coord_map = json.loads(f.read())
-        print("loaded %s as trusted charset (%d agreed)" % (use_font, len(max_agreed)))
+        print("loaded %s as trusted charset (agreed by %s)" % (use_font, max_agreed))
         return
 
     result_chars = {}
@@ -62,12 +62,12 @@ def load_existing_result():
         if len(agreed) > len(max_agreed):
             max_agreed = agreed
     
-    if max_agreed == 1:
+    if len(max_agreed) == 1:
         print("not able to find a trusted charset")
         return
     
     use_font = max_agreed[0]
-    print("use %s as trusted charset (%d agreed)" % (use_font, len(max_agreed)))
+    print("use %s as trusted charset (agreed by %s)" % (use_font, max_agreed))
     known_chars = result_chars[use_font]
     
     ttf = TTFont(os.path.join("fonts", use_font+".ttf"), 0, allowVID=0, ignoreDecompileErrors=True, fontNumber=-1)
@@ -171,7 +171,7 @@ def parse(font_name, temp, coord_fuzz=0):
     char_map = {}
     # try coord
     char_map = find_by_coord(ttf, coord_fuzz)
-    if not char_map:
+    if not char_map or True:
         errors = []
         for sz in (64, 96):
             try:
