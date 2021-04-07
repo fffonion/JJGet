@@ -142,7 +142,9 @@
     <PackageReference Include="HtmlAgilityPack">
       <Version>1.11.32</Version>
     </PackageReference>
-    <PackageReference Include="ILMerge" Version="3.0.41" />
+    <PackageReference Include="ILRepack">
+      <Version>2.0.18</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
@@ -154,8 +156,40 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-    <Target Name="ILMerge">
-    <!-- the ILMergePath property points to the location of ILMerge.exe console application -->
-    <Exec Command="$(ILMergeConsolePath) /out:bin\Release\jjget-merged.exe bin\Release\jjget.exe bin\Release\HtmlAgilityPack.dll bin\Release\Newtonsoft.Json.dll" />
+  <Target Name="GetAssmeblyVersion" AfterTargets="Build">
+    <GetAssemblyIdentity
+        AssemblyFiles="$(TargetPath)">
+      <Output
+          TaskParameter="Assemblies"
+          ItemName="Assembly"/>
+    </GetAssemblyIdentity>
+  </Target>
+ 
+  <ItemGroup>
+    <SourceFiles Include="*.txt"/>
+    <Dest Include="One;Two;Three;Four;Five"/>
+  </ItemGroup>
+  <PropertyGroup>
+    <DistDirectory>$(SolutionDir)\dist</DistDirectory>
+    <DistDirectoryTemp>$(DistDirectory)\temp</DistDirectoryTemp>
+  </PropertyGroup>
+ 
+  <Target Name="Makedist"
+          AfterTargets="Build"
+          Condition="$(Configuration) == 'Release'">
+    <RemoveDir
+          Directories="$(DistDirectoryTemp)"/>
+    <MakeDir
+          Directories="$(DistDirectoryTemp)"/>
+    <Exec Command="$(ILRepack) /wildcards /out:$(DistDirectoryTemp)\$(AssemblyName).exe $(OutputPath)\$(AssemblyName).exe $(OutputPath)\*.dll" />
+    <Delete Files="$(DistDirectoryTemp)\jjget.pdb" />
+    <Delete Files="$(DistDirectoryTemp)\jjget.exe.config" />
+    <Copy
+          SourceFiles="bin\Debug\.jjfont"
+          DestinationFolder="$(DistDirectoryTemp)"/>
+    <ZipDirectory
+          SourceDirectory="$(DistDirectoryTemp)"
+          Overwrite="true"
+          DestinationFile="$(DistDirectory)\$(AssemblyName)-%(Assembly.Version).zip" />
   </Target>
 </Project>
