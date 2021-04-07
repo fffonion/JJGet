@@ -23,7 +23,7 @@ if not os.path.exists("fonts"):
 PER_LINE = 20
 CHAR_LT = 10000
 FUZZ = 20
-CONFIDENCY = 0.4
+CONFIDENCY = 0.3
 HIGH_CONFIDENCY = 0.9
 
 PLACEHOLDER_LEARNED = "-------"
@@ -101,9 +101,10 @@ def learn_candidate(fuzz):
         for path_length in cans_font_types:
             cans = cans_font_types[path_length]
             # skip known characters
-            if cans == None:
+            if cans == None or cans == PLACEHOLDER_LEARNED:
                 continue
-            if len(cans) == 1 or len(cans) < len(candidate_names) * CONFIDENCY:
+            cand_confi = len(cans) / len(candidate_names)
+            if len(cans) == 1 or len(cans) < 3:
                 print("%s doesn't have enough data to learn (has %d, need %d)" % (
                     k, len(cans), len(candidate_names) * CONFIDENCY
                 ))
@@ -112,12 +113,21 @@ def learn_candidate(fuzz):
             for i in range(1, len(cans)):
                 if is_glpyh_similar(cans[0], cans[i], fuzz):
                     agreed += 1
-            if agreed > (len(cans) - 1) * CONFIDENCY:
-                print("learned %s with %d/%d" % (k, agreed, len(cans)))
-                coord_map[k] = cans[0]
-                if agreed > (len(cans) - 1) * HIGH_CONFIDENCY:
-                    # clear the candidate buffer, stop further learning
-                    cans_font_types[path_length] = PLACEHOLDER_LEARNED
+            # confidency of currnet group
+            confi = agreed / (len(cans) - 1)
+            # the confidency overall fonts
+            confi_overall = agreed / len(candidate_names)
+            if confi > CONFIDENCY:
+                if k not in coord_map or coord_map[k][0] < confi_overall:
+                    print("learned %s with %d/%d %s" % (
+                        k, agreed, len(cans),
+                        "increased from %.2f to %.2f" % (coord_map[k][0], confi)
+                            if k in coord_map else ""
+                    ))
+                    coord_map[k] = (confi_overall, cans[0])
+                    if confi > HIGH_CONFIDENCY and cand_confi > HIGH_CONFIDENCY:
+                        # clear the candidate buffer
+                        cans_font_types[path_length] = PLACEHOLDER_LEARNED
             else:
                 print(k, "failed", agreed, (len(cans) - 1) * CONFIDENCY)
 
@@ -152,7 +162,6 @@ def find_by_coord(ttf, fuzz):
     if not coord_map:
         return result
 
-    missing = set()
     cmap = ttf["cmap"]
     for x in cmap.tables:
         for y in x.cmap.items():
@@ -160,33 +169,23 @@ def find_by_coord(ttf, fuzz):
             if tc in result or y[0] < CHAR_LT:
                 continue
             coord = list(ttf['glyf'][y[1]].coordinates)
+            cans = []
             for rc in coord_map:
-                if len(coord) != len(coord_map[rc]):
+                confi, ico = coord_map[rc]
+                if len(coord) != len(ico):
                     continue
-                ico = coord_map[rc]
                 if is_glpyh_similar(coord, ico, fuzz):
                     #print("found ", tc, "==", rc, "(", known_chars[rc], ")")
-                    result[tc] = rc
-                    if tc in missing:
-                        missing.remove(tc)
-                    break
-                # current char might match a different path length
-                # remember it and remove when found
-                if tc not in result:
-                    missing.add(tc)
-    for k in missing:
-        result[k] = "?"
+                    cans.append((rc, confi))
+            
+            if cans:
+                if len(cans) > 1:
+                    print(cans)
+                cans = sorted(cans, key=lambda x: x[1])
+                result[tc] = cans[0][0]
     return result
 
-def find_by_ocr(ttf, font_name, temp, pointsize):
-    ttf_chars = {}
-    for x in ttf["cmap"].tables:
-        for y in x.cmap.items():
-            char_unicode = chr(y[0])
-            if char_unicode == "x":
-                continue
-            ttf_chars[char_unicode] = "?"
-
+def find_by_ocr(ttf_chars, font_name, temp, pointsize):
     img_path = os.path.join(temp.name, "%s.png" % font_name)
     ttf_path = "fonts/%s.ttf" % font_name
     #print(img_path)
@@ -234,21 +233,32 @@ def parse(font_name, temp, coord_fuzz=40):
             f.write(ttf_content.content)
 
     ttf = TTFont(ttf_path, 0, allowVID=0, ignoreDecompileErrors=True, fontNumber=-1)
+    ttf_chars = {}
+    for x in ttf["cmap"].tables:
+        for y in x.cmap.items():
+            char_unicode = chr(y[0])
+            if char_unicode == "x":
+                continue
+            ttf_chars[char_unicode] = "?"
 
     char_map = {}
     # try coord
     char_map = find_by_coord(ttf, coord_fuzz)
     missing = set()
-    for k in char_map:
-        if char_map[k] == "?":
-            missing.add(k)
-    if not char_map or len(missing):
-        if missing:
-            print("fast compare missing %d: %s" % (len(missing), ",".join(missing)))
+    for k in ttf_chars:
+        kk = "%x" % ord(k)
+        if kk not in char_map:
+            missing.add(kk)
+    if not char_map or len(missing) > 0:
+        if len(missing) > 0:
+            print("fast compare missing %d: %s" % (
+                len(missing), ",".join(missing)
+            ))
         errors = []
+        ocr_char_map = {}
         for sz in (64, 96):
             try:
-                char_map = find_by_ocr(ttf, font_name, temp, 64)
+                ocr_char_map = find_by_ocr(ttf_chars, font_name, temp, 64)
             except Exception as ex:
                 errors.append("%d:%s" % (sz, str(ex)))
             else:
@@ -259,6 +269,10 @@ def parse(font_name, temp, coord_fuzz=40):
         # save result for fast compare
         with open(os.path.join("results-ocr", "%s.json" % font_name), "wb") as f:
             f.write(json.dumps(char_map).encode("utf-8"))
+        
+        # only fill in unknowns
+        for k in missing:
+            char_map[k] = ocr_char_map[k]
         
         load_candidate(font_name)
         learn_candidate(coord_fuzz)
