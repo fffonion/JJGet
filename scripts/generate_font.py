@@ -181,7 +181,7 @@ def find_by_coord(ttf, fuzz):
             if cans:
                 if len(cans) > 1:
                     print(cans)
-                cans = sorted(cans, key=lambda x: x[1])
+                cans = sorted(cans, key=lambda x: x[1], reverse=True)
                 result[tc] = cans[0][0]
     return result
 
