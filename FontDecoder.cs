@@ -25,6 +25,7 @@ namespace jjget
         private HttpUtil hu;
         private Mapping map;
         private Action<string, Color> setProgressDelegate;
+        private bool ignoreDecodingErrors;
 
         public FontDecoder()
         {
@@ -32,6 +33,11 @@ namespace jjget
             hu.setEncoding("utf-8");
 
             this.loadMappings();
+        }
+
+        public void setIgnoreDecodingErrors(bool ignore)
+        {
+            ignoreDecodingErrors = ignore;
         }
 
         Regex customChar = new Regex(@"&#x([a-f0-9]+)");
@@ -48,7 +54,7 @@ namespace jjget
             return customChar.Replace(ct, m =>
             {
                 var r = m.Groups[1].Value.ToLower();
-                if(!lookup.ContainsKey(r))
+                if(!lookup.ContainsKey(r) && !ignoreDecodingErrors)
                 {
                     throw new FontDecoderException("字体" + fontName + "中的字符" + r + "无法解码");
                 }

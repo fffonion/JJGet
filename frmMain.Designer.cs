@@ -43,6 +43,7 @@
             this.txtSaveLoc = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.grpConfig = new System.Windows.Forms.GroupBox();
+            this.chkIgnoreFontDecodingError = new System.Windows.Forms.CheckBox();
             this.lblLoginInfo = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.btnOpenDir = new System.Windows.Forms.Button();
@@ -109,7 +110,7 @@
             this.lblChapterCnt.AutoSize = true;
             this.lblChapterCnt.Location = new System.Drawing.Point(245, 22);
             this.lblChapterCnt.Name = "lblChapterCnt";
-            this.lblChapterCnt.Size = new System.Drawing.Size(15, 17);
+            this.lblChapterCnt.Size = new System.Drawing.Size(28, 31);
             this.lblChapterCnt.TabIndex = 4;
             this.lblChapterCnt.Text = "0";
             // 
@@ -120,7 +121,7 @@
             this.lblFinnished.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.lblFinnished.Location = new System.Drawing.Point(274, 22);
             this.lblFinnished.Name = "lblFinnished";
-            this.lblFinnished.Size = new System.Drawing.Size(32, 17);
+            this.lblFinnished.Size = new System.Drawing.Size(62, 31);
             this.lblFinnished.TabIndex = 5;
             this.lblFinnished.Text = "完结";
             this.lblFinnished.Visible = false;
@@ -131,7 +132,7 @@
             this.label3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label3.Location = new System.Drawing.Point(202, 22);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(44, 17);
+            this.label3.Size = new System.Drawing.Size(86, 31);
             this.label3.TabIndex = 3;
             this.label3.Text = "章节：";
             // 
@@ -140,7 +141,7 @@
             this.lblAuthor.AutoSize = true;
             this.lblAuthor.Location = new System.Drawing.Point(60, 22);
             this.lblAuthor.Name = "lblAuthor";
-            this.lblAuthor.Size = new System.Drawing.Size(44, 17);
+            this.lblAuthor.Size = new System.Drawing.Size(86, 31);
             this.lblAuthor.TabIndex = 2;
             this.lblAuthor.Text = "某太太";
             // 
@@ -159,7 +160,7 @@
             this.label1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label1.Location = new System.Drawing.Point(6, 22);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 17);
+            this.label1.Size = new System.Drawing.Size(86, 31);
             this.label1.TabIndex = 0;
             this.label1.Text = "作者：";
             // 
@@ -189,7 +190,7 @@
             // 
             this.txtSaveLoc.Location = new System.Drawing.Point(15, 53);
             this.txtSaveLoc.Name = "txtSaveLoc";
-            this.txtSaveLoc.Size = new System.Drawing.Size(413, 23);
+            this.txtSaveLoc.Size = new System.Drawing.Size(413, 39);
             this.txtSaveLoc.TabIndex = 5;
             // 
             // label4
@@ -198,12 +199,13 @@
             this.label4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label4.Location = new System.Drawing.Point(10, 26);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(59, 17);
+            this.label4.Size = new System.Drawing.Size(117, 31);
             this.label4.TabIndex = 6;
             this.label4.Text = "保存路径:";
             // 
             // grpConfig
             // 
+            this.grpConfig.Controls.Add(this.chkIgnoreFontDecodingError);
             this.grpConfig.Controls.Add(this.lblLoginInfo);
             this.grpConfig.Controls.Add(this.label9);
             this.grpConfig.Controls.Add(this.btnOpenDir);
@@ -231,11 +233,24 @@
             this.grpConfig.TabStop = false;
             this.grpConfig.Text = "设置";
             // 
+            // chkIgnoreFontDecodingError
+            // 
+            this.chkIgnoreFontDecodingError.AutoSize = true;
+            this.chkIgnoreFontDecodingError.Location = new System.Drawing.Point(319, 196);
+            this.chkIgnoreFontDecodingError.Name = "chkIgnoreFontDecodingError";
+            this.chkIgnoreFontDecodingError.Size = new System.Drawing.Size(398, 35);
+            this.chkIgnoreFontDecodingError.TabIndex = 24;
+            this.chkIgnoreFontDecodingError.Text = "使用？替代V章中解码失败的字符";
+            this.toolTip1.SetToolTip(this.chkIgnoreFontDecodingError, "选中后，如果VIP章节中的加密文字解密失败，则使用问号替代且继续下载。仅在解码错误较少且下载内容可读时勾选。");
+            this.chkIgnoreFontDecodingError.UseVisualStyleBackColor = true;
+            this.chkIgnoreFontDecodingError.Visible = false;
+            this.chkIgnoreFontDecodingError.CheckedChanged += new System.EventHandler(this.chkIgnoreFontDecodingError_CheckedChanged);
+            // 
             // lblLoginInfo
             // 
-            this.lblLoginInfo.Location = new System.Drawing.Point(353, 153);
+            this.lblLoginInfo.Location = new System.Drawing.Point(316, 153);
             this.lblLoginInfo.Name = "lblLoginInfo";
-            this.lblLoginInfo.Size = new System.Drawing.Size(75, 74);
+            this.lblLoginInfo.Size = new System.Drawing.Size(112, 74);
             this.lblLoginInfo.TabIndex = 18;
             this.lblLoginInfo.Text = "登陆信息";
             this.lblLoginInfo.Visible = false;
@@ -245,7 +260,7 @@
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(234, 195);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(44, 17);
+            this.label9.Size = new System.Drawing.Size(86, 31);
             this.label9.TabIndex = 23;
             this.label9.Text = "验证码";
             // 
@@ -264,7 +279,7 @@
             this.btnLogin.Location = new System.Drawing.Point(347, 124);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(75, 26);
-            this.btnLogin.TabIndex = 19;
+            this.btnLogin.TabIndex = 17;
             this.btnLogin.Text = "登陆";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
@@ -276,7 +291,7 @@
             this.chkUsePwdMask.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUsePwdMask.Location = new System.Drawing.Point(228, 155);
             this.chkUsePwdMask.Name = "chkUsePwdMask";
-            this.chkUsePwdMask.Size = new System.Drawing.Size(51, 21);
+            this.chkUsePwdMask.Size = new System.Drawing.Size(94, 35);
             this.chkUsePwdMask.TabIndex = 17;
             this.chkUsePwdMask.Text = "密码";
             this.chkUsePwdMask.UseVisualStyleBackColor = true;
@@ -287,7 +302,7 @@
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(8, 158);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(44, 17);
+            this.label8.Size = new System.Drawing.Size(86, 31);
             this.label8.TabIndex = 16;
             this.label8.Text = "用户名";
             // 
@@ -296,14 +311,14 @@
             this.txtPwd.Location = new System.Drawing.Point(289, 153);
             this.txtPwd.Name = "txtPwd";
             this.txtPwd.PasswordChar = '*';
-            this.txtPwd.Size = new System.Drawing.Size(139, 23);
+            this.txtPwd.Size = new System.Drawing.Size(139, 39);
             this.txtPwd.TabIndex = 15;
             // 
             // txtUsername
             // 
             this.txtUsername.Location = new System.Drawing.Point(62, 153);
             this.txtUsername.Name = "txtUsername";
-            this.txtUsername.Size = new System.Drawing.Size(160, 23);
+            this.txtUsername.Size = new System.Drawing.Size(160, 39);
             this.txtUsername.TabIndex = 14;
             this.txtUsername.Leave += new System.EventHandler(this.txtUsername_Leave);
             // 
@@ -312,7 +327,7 @@
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(100, 91);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(44, 17);
+            this.label7.Size = new System.Drawing.Size(88, 31);
             this.label7.TabIndex = 13;
             this.label7.Text = "http://";
             // 
@@ -321,7 +336,7 @@
             this.chkUseMobileEdition.AutoSize = true;
             this.chkUseMobileEdition.Location = new System.Drawing.Point(156, 123);
             this.chkUseMobileEdition.Name = "chkUseMobileEdition";
-            this.chkUseMobileEdition.Size = new System.Drawing.Size(87, 21);
+            this.chkUseMobileEdition.Size = new System.Drawing.Size(166, 35);
             this.chkUseMobileEdition.TabIndex = 12;
             this.chkUseMobileEdition.Text = "使用手机版";
             this.chkUseMobileEdition.UseVisualStyleBackColor = true;
@@ -331,7 +346,7 @@
             this.txtProxyPort.Enabled = false;
             this.txtProxyPort.Location = new System.Drawing.Point(354, 88);
             this.txtProxyPort.Name = "txtProxyPort";
-            this.txtProxyPort.Size = new System.Drawing.Size(55, 23);
+            this.txtProxyPort.Size = new System.Drawing.Size(55, 39);
             this.txtProxyPort.TabIndex = 11;
             this.txtProxyPort.Text = "80";
             // 
@@ -340,7 +355,7 @@
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(339, 90);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(11, 17);
+            this.label6.Size = new System.Drawing.Size(20, 31);
             this.label6.TabIndex = 10;
             this.label6.Text = ":";
             // 
@@ -349,7 +364,7 @@
             this.txtProxyServ.Enabled = false;
             this.txtProxyServ.Location = new System.Drawing.Point(156, 88);
             this.txtProxyServ.Name = "txtProxyServ";
-            this.txtProxyServ.Size = new System.Drawing.Size(179, 23);
+            this.txtProxyServ.Size = new System.Drawing.Size(179, 39);
             this.txtProxyServ.TabIndex = 9;
             // 
             // chkUseProxy
@@ -357,7 +372,7 @@
             this.chkUseProxy.AutoSize = true;
             this.chkUseProxy.Location = new System.Drawing.Point(15, 90);
             this.chkUseProxy.Name = "chkUseProxy";
-            this.chkUseProxy.Size = new System.Drawing.Size(75, 21);
+            this.chkUseProxy.Size = new System.Drawing.Size(142, 35);
             this.chkUseProxy.TabIndex = 8;
             this.chkUseProxy.Text = "使用代理";
             this.chkUseProxy.UseVisualStyleBackColor = true;
@@ -368,7 +383,7 @@
             this.chkSplitChapter.AutoSize = true;
             this.chkSplitChapter.Location = new System.Drawing.Point(14, 123);
             this.chkSplitChapter.Name = "chkSplitChapter";
-            this.chkSplitChapter.Size = new System.Drawing.Size(111, 21);
+            this.chkSplitChapter.Size = new System.Drawing.Size(214, 35);
             this.chkSplitChapter.TabIndex = 7;
             this.chkSplitChapter.Text = "每章节一个文件";
             this.chkSplitChapter.UseVisualStyleBackColor = true;
@@ -386,8 +401,8 @@
             this.txtVerifyCode.Enabled = false;
             this.txtVerifyCode.Location = new System.Drawing.Point(289, 192);
             this.txtVerifyCode.Name = "txtVerifyCode";
-            this.txtVerifyCode.Size = new System.Drawing.Size(139, 23);
-            this.txtVerifyCode.TabIndex = 22;
+            this.txtVerifyCode.Size = new System.Drawing.Size(139, 39);
+            this.txtVerifyCode.TabIndex = 16;
             // 
             // lblPromptM
             // 
@@ -397,14 +412,14 @@
             this.lblPromptM.Name = "lblPromptM";
             this.lblPromptM.Size = new System.Drawing.Size(424, 28);
             this.lblPromptM.TabIndex = 8;
-            this.lblPromptM.Click += new System.EventHandler(this.LblPromptD_Click);
+            this.lblPromptM.Click += new System.EventHandler(this.LblPrompt_Click);
             // 
             // label5
             // 
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(358, 163);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(56, 17);
+            this.label5.Size = new System.Drawing.Size(110, 31);
             this.label5.TabIndex = 9;
             this.label5.Text = "已完成：";
             // 
@@ -413,7 +428,7 @@
             this.lblCntDone.AutoSize = true;
             this.lblCntDone.Location = new System.Drawing.Point(416, 164);
             this.lblCntDone.Name = "lblCntDone";
-            this.lblCntDone.Size = new System.Drawing.Size(15, 17);
+            this.lblCntDone.Size = new System.Drawing.Size(28, 31);
             this.lblCntDone.TabIndex = 10;
             this.lblCntDone.Text = "0";
             // 
@@ -434,7 +449,7 @@
             this.lblProgBar.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblProgBar.Location = new System.Drawing.Point(69, 363);
             this.lblProgBar.Name = "lblProgBar";
-            this.lblProgBar.Size = new System.Drawing.Size(21, 14);
+            this.lblProgBar.Size = new System.Drawing.Size(38, 28);
             this.lblProgBar.TabIndex = 12;
             this.lblProgBar.Text = "0%";
             this.lblProgBar.Visible = false;
@@ -443,7 +458,7 @@
             // 
             this.txtNovelID.Location = new System.Drawing.Point(346, 25);
             this.txtNovelID.Name = "txtNovelID";
-            this.txtNovelID.Size = new System.Drawing.Size(108, 23);
+            this.txtNovelID.Size = new System.Drawing.Size(108, 39);
             this.txtNovelID.TabIndex = 13;
             // 
             // lblPromptU
@@ -454,7 +469,7 @@
             this.lblPromptU.Name = "lblPromptU";
             this.lblPromptU.Size = new System.Drawing.Size(424, 28);
             this.lblPromptU.TabIndex = 14;
-            this.lblPromptU.Click += new System.EventHandler(this.LblPromptU_Click);
+            this.lblPromptU.Click += new System.EventHandler(this.LblPrompt_Click);
             // 
             // toolTip1
             // 
@@ -468,7 +483,7 @@
             this.linkLabel1.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
             this.linkLabel1.Location = new System.Drawing.Point(360, 190);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(66, 17);
+            this.linkLabel1.Size = new System.Drawing.Size(130, 31);
             this.linkLabel1.TabIndex = 15;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "开源许可…";
@@ -481,7 +496,7 @@
             this.linkLabel2.LinkColor = System.Drawing.Color.Teal;
             this.linkLabel2.Location = new System.Drawing.Point(377, 212);
             this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.Size = new System.Drawing.Size(32, 17);
+            this.linkLabel2.Size = new System.Drawing.Size(62, 31);
             this.linkLabel2.TabIndex = 16;
             this.linkLabel2.TabStop = true;
             this.linkLabel2.Text = "帮助";
@@ -496,10 +511,11 @@
             this.lblPromptD.Name = "lblPromptD";
             this.lblPromptD.Size = new System.Drawing.Size(424, 28);
             this.lblPromptD.TabIndex = 17;
+            this.lblPromptD.Click += new System.EventHandler(this.LblPrompt_Click);
             // 
             // frmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(467, 640);
             this.Controls.Add(this.lblPromptD);
@@ -579,6 +595,7 @@
         private System.Windows.Forms.TextBox txtVerifyCode;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label lblPromptD;
+        private System.Windows.Forms.CheckBox chkIgnoreFontDecodingError;
     }
 }
 

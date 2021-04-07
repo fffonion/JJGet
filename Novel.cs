@@ -534,5 +534,10 @@ namespace jjget
             userDetail = "";
             hasLogin = false;
         }
+
+        public FontDecoder getFontDecoder()
+        {
+            return fontDecoder;
+        }
     }
 }

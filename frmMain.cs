@@ -23,6 +23,7 @@ namespace jjget
             InitializeComponent();
             res = new ComponentResourceManager(typeof(frmMain));
             picVerifyCode.BringToFront();
+            chkIgnoreFontDecodingError.BringToFront();
         }
 
         private void setProgressBar(float prog)
@@ -272,6 +273,8 @@ namespace jjget
             Program.SetCueText(txtProxyPort, "代理端口");
             lblLoginInfo.Size = new Size(417, 74);
             lblLoginInfo.Location = new Point(label8.Location.X+3, lblLoginInfo.Location.Y);
+            chkIgnoreFontDecodingError.Location = new Point(
+                lblLoginInfo.Location.X+3, chkIgnoreFontDecodingError.Location.Y);
             loginRoutine(true);
             //lblLoginInfo.Visible = true;
         }
@@ -298,6 +301,7 @@ namespace jjget
             Action setctls = new Action(() => {
                 lblLoginInfo.Visible = true;
                 lblLoginInfo.Text = novel.userDetail;
+                chkIgnoreFontDecodingError.Visible = true;
                 btnLogin.Text = "退出";
                 btnLogin.Enabled = true;
                 picVerifyCode.Image = null;
@@ -350,6 +354,7 @@ namespace jjget
                 novel.deleteSavedUser();
                 lblLoginInfo.Visible = false;
                 lblLoginInfo.Text = "";
+                chkIgnoreFontDecodingError.Visible = false;
                 btnLogin.Text = "登陆";
             }
         }
@@ -366,7 +371,11 @@ namespace jjget
                 "·必须登录已购买VIP章节的账户才能下载VIP章节\n"+
                 "·勾选使用手机版时，若遇到VIP章节，会自动切换电脑版\n\n"+
                 "【连载】\n"+
-                "保留同一目录下的jjget文件即可在下次文章更新后继续下载", "JJGET-HELP", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "保留同一目录下的jjget文件即可在下次文章更新后继续下载\n\n" +
+                "【字体xxx中的字符xxx无法解码】\n" +
+                "如果在下载VIP章节时需要此问题，可以尝试勾选\n"+
+                "\"使用？替代V章中解码失败的字符\"，\n" +
+                "并人工验证下载文本的可读性\n", "JJGET-HELP", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnOpenDir_Click(object sender, EventArgs e)
@@ -383,20 +392,17 @@ namespace jjget
             })).Start();
         }
 
-        private void LblPromptU_Click(object sender, EventArgs e)
+        private void LblPrompt_Click(object sender, EventArgs e)
         {
-            if(lblPromptU.Text!= "")
+            if (((Label)sender).Text != "")
             {
-                MessageBox.Show(lblPromptU.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(((Label)sender).Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
-        private void LblPromptD_Click(object sender, EventArgs e)
+        private void chkIgnoreFontDecodingError_CheckedChanged(object sender, EventArgs e)
         {
-            if (lblPromptM.Text != "")
-            {
-                MessageBox.Show(lblPromptM.Text, "展开全部信息", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            }
+            novel.getFontDecoder().setIgnoreDecodingErrors(chkIgnoreFontDecodingError.Checked);
         }
     }
 }

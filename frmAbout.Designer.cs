@@ -117,16 +117,16 @@
             this.label6.Location = new System.Drawing.Point(9, 150);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(278, 64);
+            this.label6.Size = new System.Drawing.Size(202, 64);
             this.label6.TabIndex = 6;
-            this.label6.Text = "HtmlAgilityPack 1.11.8\r\n - https://github.com/zzzprojects/html-agility-pack\r\nNewt" +
-    "onsoft.Json 12.0.2\r\n - https://github.com/JamesNK/Newtonsoft.Json";
+            this.label6.Text = "HtmlAgilityPack 0.0\r\n - https://html-agility-pack.net/\r\nNewtonsoft.Json 0.0\r\n - h" +
+    "ttps://www.newtonsoft.com/json";
             // 
             // frmAbout
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(296, 232);
+            this.ClientSize = new System.Drawing.Size(280, 232);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
