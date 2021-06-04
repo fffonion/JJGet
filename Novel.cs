@@ -23,6 +23,7 @@ namespace jjget
         private string savePath;
         public bool isFinnished;
         private bool useMobileEdition = true;
+        private bool includeAuthorsWords = true;
         private HttpUtil _savedHttpUtil = null;
         private string cookiestr;
         public string userDetail;
@@ -54,6 +55,11 @@ namespace jjget
         public void setUseMobile(bool use)
         {
             this.useMobileEdition = use;
+        }
+
+        public void setIncludeAuthorsWords(bool inc)
+        {
+            this.includeAuthorsWords = inc;
         }
 
         public void registerSetProgressDelegate(Action<String, Color> d)
@@ -413,9 +419,17 @@ namespace jjget
                     }
                 }
                 chpt.title = novelnode.SelectSingleNode("./div/h2").InnerText;
+
                 //作者的话
-                HtmlNode hn2 = root.SelectSingleNode("//div[@class='readsmall']");
-                chpt.content = parseText_Img_Link(hn2);
+                if (this.includeAuthorsWords)
+                {
+                    HtmlNode hn2 = root.SelectSingleNode("//div[@class='readsmall']");
+                    chpt.content = parseText_Img_Link(hn2);
+                } else
+                {
+                    chpt.content = "";
+                }
+
                 //内容
                 List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img|./script").ToList();
                 foreach(HtmlNode hn in hnl){

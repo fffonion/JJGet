@@ -300,8 +300,6 @@ namespace jjget
             Program.SetCueText(txtNovelID, "输入NovelID");
             Program.SetCueText(txtProxyServ, "代理IP");
             Program.SetCueText(txtProxyPort, "代理端口");
-            Program.SetCueText(txtStartChap, "起");
-            Program.SetCueText(txtEndChap, "止");
             lblLoginInfo.Size = new Size(417, 74);
             lblLoginInfo.Location = new Point(label8.Location.X + 3, lblLoginInfo.Location.Y);
             chkIgnoreFontDecodingError.Location = new Point(
@@ -438,6 +436,11 @@ namespace jjget
         private void chkIgnoreFontDecodingError_CheckedChanged(object sender, EventArgs e)
         {
             novel.getFontDecoder().setIgnoreDecodingErrors(chkIgnoreFontDecodingError.Checked);
+        }
+
+        private void chkIncludeAuthorsWords_CheckedChanged(object sender, EventArgs e)
+        {
+            novel.setIncludeAuthorsWords(chkIncludeAuthorsWords.Checked);
         }
     }
 }
