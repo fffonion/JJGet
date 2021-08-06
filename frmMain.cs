@@ -28,15 +28,15 @@ namespace jjget
 
         private void setProgressBar(float prog)
         {
-            this.lblProgBar.Text = ((int)(prog*100)).ToString() + "%";
-            int cnt = (int)(prog * 7) ;
+            this.lblProgBar.Text = ((int)(prog * 100)).ToString() + "%";
+            int cnt = (int)(prog * 7);
             if (!picProgress.Visible || !lblProgBar.Visible)
             {
                 picProgress.Visible = true;
                 lblProgBar.Visible = true;
             }
             if (cnt == 0) return;
-            while (cnt > progboxes.Count && cnt<=7)
+            while (cnt > progboxes.Count && cnt <= 7)
             {
                 PictureBox pb = new PictureBox();
                 pb.Image = (Image)res.GetObject("picProgress.Image");
@@ -51,7 +51,7 @@ namespace jjget
 
         private void resetProgressBar()
         {
-            foreach(PictureBox p in progboxes)
+            foreach (PictureBox p in progboxes)
                 this.Controls.Remove(p);
             progboxes.Clear();
             lblProgBar.Location = new Point(68, lblProgBar.Location.Y);
@@ -66,23 +66,25 @@ namespace jjget
 
         private void setPrompt(string text, Color c)
         {
-            this.Invoke(new Action(() => {
-                    lblPromptU.Text = lblPromptM.Text;
-                    lblPromptU.ForeColor = lblPromptM.ForeColor;
-                    lblPromptM.Text = lblPromptD.Text;
-                    lblPromptM.ForeColor = lblPromptD.ForeColor;
-                    lblPromptD.Text = text;
-                    lblPromptD.ForeColor = c;
-                    toolTip1.SetToolTip(lblPromptU, lblPromptU.Text);
-                    toolTip1.SetToolTip(lblPromptM, lblPromptM.Text);
-                    toolTip1.SetToolTip(lblPromptD, lblPromptD.Text);
+            this.Invoke(new Action(() =>
+            {
+                lblPromptU.Text = lblPromptM.Text;
+                lblPromptU.ForeColor = lblPromptM.ForeColor;
+                lblPromptM.Text = lblPromptD.Text;
+                lblPromptM.ForeColor = lblPromptD.ForeColor;
+                lblPromptD.Text = text;
+                lblPromptD.ForeColor = c;
+                toolTip1.SetToolTip(lblPromptU, lblPromptU.Text);
+                toolTip1.SetToolTip(lblPromptM, lblPromptM.Text);
+                toolTip1.SetToolTip(lblPromptD, lblPromptD.Text);
             }
             ));
         }
 
         private void setVerifyCode(byte[] text)
         {
-            this.Invoke(new Action(() => {
+            this.Invoke(new Action(() =>
+            {
                 txtVerifyCode.Text = "";
                 if (text.Length == 0)
                 {
@@ -97,7 +99,7 @@ namespace jjget
                     picVerifyCode.Image = Image.FromStream(m);
                     m.Dispose();
                 }
-               
+
             }
             ));
         }
@@ -125,17 +127,19 @@ namespace jjget
             updateNovelSettings();
             if (txtNovelID.Text == "")
             {
-                MessageBox.Show("请输入小说id","JJGET-ERROR",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show("请输入小说id", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 txtNovelID.Focus();
                 return;
             }
             novel.setSaveLoc(txtSaveLoc.Text);
             try
             {
-                if(!novel.getIndex(int.Parse(txtNovelID.Text)))
+                if (!novel.getIndex(int.Parse(txtNovelID.Text)))
                     throw new ArgumentNullException("正则匹配失败？");
-            }catch(Exception ex){
-                MessageBox.Show("处理失败！大概是NovelID输错了？\n"+ex.Message, "JJGET-ERROR",MessageBoxButtons.OK,MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("处理失败！大概是NovelID输错了？\n" + ex.Message, "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 setPrompt("处理失败！ ", Color.Red);
                 return;
             }
@@ -153,19 +157,43 @@ namespace jjget
         {
             //novel = new Novel();
             //novel.chapterCount = 999;
+            if (int.TryParse(txtStartChap.Text, out int startchap) && int.TryParse(txtEndChap.Text, out int endchap)) {
+                if (startchap < 1 || startchap > novel.chapterCount)
+                {
+                    setPrompt("起始章节有误");
+                    return;
+                }
+                if (endchap < 1 || endchap > novel.chapterCount)
+                {
+                    setPrompt("截至章节有误");
+                    return;
+                }
+                if (startchap > endchap)
+                {
+                    setPrompt("起始章节大于结束章节");
+                    return;
+                }
+                novel.startDlChapter = startchap - 1;
+                novel.endDlChapter = endchap;
+            }
+            else
+            {
+                novel.startDlChapter = 0;
+                novel.endDlChapter = novel.chapterCount;
+            }
             updateNovelSettings();
             if (btnStart.Text == "暂停")
             {
                 this.need_stop = true;
                 return;
             }
-            Novel.Chapter chpt=new Novel.Chapter();
+            Novel.Chapter chpt = new Novel.Chapter();
             btnStart.Text = "暂停";
             resetProgressBar();
-            setProgressBar((float)novel.chapterDone / novel.chapterCount);
+            setProgressBar(0);
             downloadThread = new Thread(new ThreadStart(() =>
             {
-                for (int i = novel.chapterDone + 1; i <= novel.chapterCount; i++)
+                for (int i = novel.startDlChapter + 1; i <= novel.endDlChapter; i++)
                 {
                     Thread.Sleep(233);
                     bool terminate = false;
@@ -183,9 +211,9 @@ namespace jjget
                         }
                         catch (NullReferenceException)
                         {
-                            if(novel.isVipChapter(i))
-                                setPrompt(("章节" + i + "是VIP章节，"+ 
-                                    (novel.hasLogin?"可能是账号没有购买，或者登陆过期；请尝试稍后重试":"需要登录后才能下载")), Color.Red);
+                            if (novel.isVipChapter(i))
+                                setPrompt(("章节" + i + "是VIP章节，" +
+                                    (novel.hasLogin ? "可能是账号没有购买，或者登陆过期；请尝试稍后重试" : "需要登录后才能下载")), Color.Red);
                             else
                                 MessageBox.Show("处理章节" + i + "时正则匹配失败，请联系作者", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             terminate = true;
@@ -226,22 +254,23 @@ namespace jjget
                     }
                     this.Invoke(new Action(() =>
                     {
-                        setProgressBar((float)i / novel.chapterCount);
+                        setProgressBar((float)(i-novel.startDlChapter+1) / (novel.endDlChapter-novel.startDlChapter+1));
                         lblCntDone.Text = i.ToString();
                     }));
                 }
-                this.Invoke(new Action(() => { 
+                this.Invoke(new Action(() =>
+                {
                     btnStart.Text = "开始";
                     lblProgBar.Visible = false;
                 }
                 ));
-                setPrompt("《"+novel.name + "》下载结束(*￣▽￣)y ");
-                if(novel.isFinnished)
+                setPrompt("《" + novel.name + "》下载结束(*￣▽￣)y ");
+                if (novel.isFinnished)
                     novel.deleteProgress();
             }));
             downloadThread.Start();
-            
-            
+
+
         }
 
         private void btnChooseSaveLoc_Click(object sender, EventArgs e)
@@ -271,10 +300,12 @@ namespace jjget
             Program.SetCueText(txtNovelID, "输入NovelID");
             Program.SetCueText(txtProxyServ, "代理IP");
             Program.SetCueText(txtProxyPort, "代理端口");
+            Program.SetCueText(txtStartChap, "起");
+            Program.SetCueText(txtEndChap, "止");
             lblLoginInfo.Size = new Size(417, 74);
-            lblLoginInfo.Location = new Point(label8.Location.X+3, lblLoginInfo.Location.Y);
+            lblLoginInfo.Location = new Point(label8.Location.X + 3, lblLoginInfo.Location.Y);
             chkIgnoreFontDecodingError.Location = new Point(
-                lblLoginInfo.Location.X+3, chkIgnoreFontDecodingError.Location.Y);
+                lblLoginInfo.Location.X + 3, chkIgnoreFontDecodingError.Location.Y);
             loginRoutine(true);
             //lblLoginInfo.Visible = true;
         }
@@ -298,7 +329,8 @@ namespace jjget
         }
         private bool loginRoutine(bool isCheck)
         {
-            Action setctls = new Action(() => {
+            Action setctls = new Action(() =>
+            {
                 lblLoginInfo.Visible = true;
                 lblLoginInfo.Text = novel.userDetail;
                 chkIgnoreFontDecodingError.Visible = true;
@@ -332,7 +364,8 @@ namespace jjget
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            if(btnLogin.Text == "登陆"){
+            if (btnLogin.Text == "登陆")
+            {
                 if (txtUsername.Text == "" || txtPwd.Text == "")
                 {
                     MessageBox.Show("请输入用户名密码ww", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -349,7 +382,8 @@ namespace jjget
                     }
                     this.Invoke(new Action(() => btnLogin.Enabled = true));
                 })).Start();
-            }else
+            }
+            else
             {
                 novel.deleteSavedUser();
                 lblLoginInfo.Visible = false;
@@ -366,14 +400,14 @@ namespace jjget
 
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            MessageBox.Show("【下载】\n"+
-                "·使用手机版有时可以加快下载速度\n"+
-                "·必须登录已购买VIP章节的账户才能下载VIP章节\n"+
-                "·勾选使用手机版时，若遇到VIP章节，会自动切换电脑版\n\n"+
-                "【连载】\n"+
+            MessageBox.Show("【下载】\n" +
+                "·使用手机版有时可以加快下载速度\n" +
+                "·必须登录已购买VIP章节的账户才能下载VIP章节\n" +
+                "·勾选使用手机版时，若遇到VIP章节，会自动切换电脑版\n\n" +
+                "【连载】\n" +
                 "保留同一目录下的jjget文件即可在下次文章更新后继续下载\n\n" +
                 "【字体xxx中的字符xxx无法解码】\n" +
-                "如果在下载VIP章节时需要此问题，可以尝试勾选\n"+
+                "如果在下载VIP章节时需要此问题，可以尝试勾选\n" +
                 "\"使用？替代V章中解码失败的字符\"，\n" +
                 "并人工验证下载文本的可读性\n", "JJGET-HELP", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -385,7 +419,8 @@ namespace jjget
 
         private void txtUsername_Leave(object sender, EventArgs e)
         {
-            new Thread(new ThreadStart(() => {
+            new Thread(new ThreadStart(() =>
+            {
                 this.Invoke(new Action(() => btnLogin.Enabled = false));
                 novel.checkVerifyCode(txtUsername.Text, false);
                 this.Invoke(new Action(() => btnLogin.Enabled = true));
