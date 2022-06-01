@@ -17,6 +17,8 @@ namespace jjget
         public string descriptions;
         public int chapterCount;
         public int chapterDone;
+        public int startDlChapter;
+        public int endDlChapter;
         private int novelid;
         private string savePath;
         public bool isFinnished;
