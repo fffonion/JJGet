@@ -33,6 +33,7 @@ namespace jjget
         private Action<byte[]> setVerifyCodeDelegate;
         private List<int> vipChapters = new List<int>();
         private FontDecoder fontDecoder = new FontDecoder();
+        private Decryptor decryptor = new Decryptor();
         public struct Chapter
         {
             public int chapterIndex;
@@ -67,6 +68,8 @@ namespace jjget
             this.setProgressDelegate = d;
 
             this.fontDecoder.registerSetProgressDelegate(d);
+
+            this.decryptor.registerSetProgressDelegate(d);
         }
 
         private void setPrompt(string text)
@@ -368,6 +371,16 @@ namespace jjget
             return true;
         }
 
+        private string getInputLabelValue(HtmlNode root, string name)
+        {
+            var node = root.SelectSingleNode("//input[@name='" + name + "']");
+            if(node == null)
+            {
+                return "";
+            }
+            return node.GetAttributeValue("value", "");
+        }
+
         public Chapter getSingleChapter(int chapter)
         {
             if (chapter > this.chapterCount)
@@ -387,7 +400,8 @@ namespace jjget
             setPrompt("章节" + chapter + (isVip?"[VIP]":"") + "下载中……", Color.Orange);
             // VIP章节忽略返回的cookie，好像是假的
             string html = hu.Get(getChapterURL(chapter, isVip), getNovelURL(), isVip);
-            //StreamReader sFile = new StreamReader("z://.txt", Encoding.GetEncoding("gb2312"));
+            //FileStream fs = new FileStream(@"D:\Workspace\JJGet\s.txt", FileMode.Open);
+            //StreamReader sFile = new StreamReader(fs);
             //string html = sFile.ReadToEnd();
             //setPrompt("分析中……", Color.Orange);
             HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
@@ -435,12 +449,43 @@ namespace jjget
                 }
 
                 //内容
-                List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img|./script").ToList();
-                foreach(HtmlNode hn in hnl){
-                    novelnode.RemoveChild(hn);
+                string mainbody;
+
+                var encryptedContent = getInputLabelValue(root, "content");
+                if(encryptedContent != "")
+                {
+                    string[] contextKeys = {
+                        "jsver", "cryptInfo", "accessKey",
+                        "contentid", "novelid", "chapterid",
+                    };
+                    var context = new Dictionary<string, string>();
+                    foreach(string key in contextKeys)
+                    {
+                        context[key] = getInputLabelValue(root, key);
+                    }
+                    Regex jsidRegex = new Regex(@"//my\.jjwxc\.net/backend/favorite\.php\?jsid=(\d+)");
+                    var match = jsidRegex.Match(root.InnerHtml);
+                    if(!match.Success)
+                    {
+                        throw new Exception("jsid提取失败");
+                    }
+                    context["jsid"] = match.Groups[1].Value;
+
+                    mainbody = this.decryptor.Decrypt(encryptedContent, context);
+                } else
+                {
+                    novelnode = novelnode.Clone(); // 避免修改DocumentNode
+                    List<HtmlNode> hnl = novelnode.SelectNodes("./div|./font|./hr|./img|./script").ToList();
+                    foreach (HtmlNode hn in hnl)
+                    {
+                        novelnode.RemoveChild(hn);
+                    }
+                    mainbody = novelnode.InnerHtml;
                 }
-                var mainbody = HtmlEntity.DeEntitize(
-                    novelnode.InnerHtml.Replace("<br>", "\r\n").Replace("</br>", "\r\n"));
+
+                mainbody = HtmlEntity.DeEntitize(
+                       mainbody.Replace("<br>", "\r\n").Replace("</br>", "\r\n"));
+
                 if (fontName != "")
                 {
                     mainbody = decodeCustomFont(mainbody, fontName);
