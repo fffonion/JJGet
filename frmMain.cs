@@ -20,6 +20,7 @@ namespace jjget
             novel = new Novel();
             novel.registerSetProgressDelegate(this.setPrompt);
             novel.registerSetVerifyCodeDelegate(this.setVerifyCode);
+
             InitializeComponent();
             res = new ComponentResourceManager(typeof(frmMain));
             picVerifyCode.BringToFront();
@@ -108,6 +109,7 @@ namespace jjget
         private void updateNovelSettings()
         {
             novel.registerSetProgressDelegate(this.setPrompt);
+            novel.registerSetVerifyCodeDelegate(this.setVerifyCode);
             novel.setUseMobile(chkUseMobileEdition.Checked);
             if (!chkUseProxy.Checked)
                 return;
@@ -155,32 +157,28 @@ namespace jjget
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //novel = new Novel();
-            //novel.chapterCount = 999;
-            if (int.TryParse(txtStartChap.Text, out int startchap) && int.TryParse(txtEndChap.Text, out int endchap)) {
-                if (startchap < 1 || startchap > novel.chapterCount)
-                {
-                    setPrompt("起始章节有误");
-                    return;
-                }
-                if (endchap < 1 || endchap > novel.chapterCount)
-                {
-                    setPrompt("截至章节有误");
-                    return;
-                }
-                if (startchap > endchap)
-                {
-                    setPrompt("起始章节大于结束章节");
-                    return;
-                }
-                novel.startDlChapter = startchap - 1;
-                novel.endDlChapter = endchap;
-            }
-            else
+            int startchap = 1, endchap = novel.chapterCount;
+            if(txtStartChap.Text!= "") int.TryParse(txtStartChap.Text, out startchap);
+            if(txtEndChap.Text != "") int.TryParse(txtEndChap.Text, out endchap);
+
+            if (startchap < 1 || startchap > novel.chapterCount)
             {
-                novel.startDlChapter = 0;
-                novel.endDlChapter = novel.chapterCount;
+                setPrompt("起始章节有误");
+                return;
             }
+            if (endchap < 1 || endchap > novel.chapterCount)
+            {
+                setPrompt("截至章节有误");
+                return;
+            }
+            if (startchap > endchap)
+            {
+                setPrompt("起始章节大于结束章节");
+                return;
+            }
+            novel.startDlChapter = startchap - 1;
+            novel.endDlChapter = endchap;
+
             updateNovelSettings();
             if (btnStart.Text == "暂停")
             {

@@ -70,6 +70,7 @@ namespace jjget
                 try
                 {
                     ct = hu.Get("https://jjwxc.yooooo.us/" + fontName + ".json?version=" + Application.ProductVersion);
+                    break;
                 }catch(Exception ex)
                 {
                     setPrompt("字体下载失败" + ex.ToString(), Color.Orange);

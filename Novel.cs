@@ -409,6 +409,10 @@ namespace jjget
             else
             {
                 HtmlNode novelnode = root.SelectSingleNode("//div[contains(@class,'noveltext')]");
+                if(novelnode == null)
+                {
+                    throw new Exception("章节" + chapter + (isVip ? "是VIP章节，请登陆ww":"解析失败"));
+                }
                 //自定义字体
                 string fontName = "";
                 foreach (string cls in novelnode.GetClasses())
