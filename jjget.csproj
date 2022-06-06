@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Decryptor.cs" />
     <Compile Include="FontDecoder.cs" />
     <Compile Include="frmAbout.cs">
       <SubType>Form</SubType>
@@ -157,39 +158,30 @@
   </Target>
   -->
   <Target Name="GetAssmeblyVersion" AfterTargets="Build">
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="Assembly" />
+    </GetAssemblyIdentity>
+  </Target>
+  <ItemGroup>
+    <SourceFiles Include="*.txt" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DistDirectory>$(MSBuildThisFileDirectory)\dist</DistDirectory>
+    <DistDirectoryTemp>$(DistDirectory)\temp</DistDirectoryTemp>
+  </PropertyGroup>
+  <Target Name="Makedist" AfterTargets="Build" Condition="$(Configuration) == 'Release'">
+    <RemoveDir Directories="$(DistDirectoryTemp)" />
+    <MakeDir Directories="$(DistDirectoryTemp)" />
+    <Exec Command="$(ILRepack) /wildcards /out:$(DistDirectoryTemp)\$(AssemblyName).exe $(OutputPath)\$(AssemblyName).exe $(OutputPath)\*.dll" />
+    <Delete Files="$(DistDirectoryTemp)\jjget.pdb" />
+    <Delete Files="$(DistDirectoryTemp)\jjget.exe.config" />
+    <Copy SourceFiles="bin\Debug\.jjfont" DestinationFolder="$(DistDirectoryTemp)" />
     <GetAssemblyIdentity
         AssemblyFiles="$(TargetPath)">
       <Output
           TaskParameter="Assemblies"
-          ItemName="Assembly"/>
+          ItemName="MyAssemblyIdentities"/>
     </GetAssemblyIdentity>
-  </Target>
- 
-  <ItemGroup>
-    <SourceFiles Include="*.txt"/>
-    <Dest Include="One;Two;Three;Four;Five"/>
-  </ItemGroup>
-  <PropertyGroup>
-    <DistDirectory>$(SolutionDir)\dist</DistDirectory>
-    <DistDirectoryTemp>$(DistDirectory)\temp</DistDirectoryTemp>
-  </PropertyGroup>
- 
-  <Target Name="Makedist"
-          AfterTargets="Build"
-          Condition="$(Configuration) == 'Release'">
-    <RemoveDir
-          Directories="$(DistDirectoryTemp)"/>
-    <MakeDir
-          Directories="$(DistDirectoryTemp)"/>
-    <Exec Command="$(ILRepack) /wildcards /out:$(DistDirectoryTemp)\$(AssemblyName).exe $(OutputPath)\$(AssemblyName).exe $(OutputPath)\*.dll" />
-    <Delete Files="$(DistDirectoryTemp)\jjget.pdb" />
-    <Delete Files="$(DistDirectoryTemp)\jjget.exe.config" />
-    <Copy
-          SourceFiles="bin\Debug\.jjfont"
-          DestinationFolder="$(DistDirectoryTemp)"/>
-    <ZipDirectory
-          SourceDirectory="$(DistDirectoryTemp)"
-          Overwrite="true"
-          DestinationFile="$(DistDirectory)\$(AssemblyName)-%(Assembly.Version).zip" />
+    <ZipDirectory SourceDirectory="$(DistDirectoryTemp)" Overwrite="true" DestinationFile="$(DistDirectory)\$(AssemblyName)-%(MyAssemblyIdentities.Version).zip" />
   </Target>
 </Project>
