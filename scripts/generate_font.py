@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from configparser import RawConfigParser
 import os
 import subprocess
 import requests
@@ -24,6 +25,8 @@ PER_LINE = 20
 CHAR_LT = 10000
 FUZZ = 20
 CONFIDENCY = 0.3
+CONFIDENT_MINIMUM_VOTER = 10 # how many minimum voters to reach agreement
+FONT_VARIANT_COUNT = 5
 HIGH_CONFIDENCY = 0.9
 
 PLACEHOLDER_LEARNED = "-------"
@@ -51,7 +54,7 @@ def load_candidate(name):
     with open(os.path.join("results-ocr", name + ".json")) as f:
         try:
             m = json.loads(f.read())             
-        except:
+        except Exception as ex:
             return
     ttf_path = os.path.join("fonts", name + ".ttf")
     if not os.path.exists(ttf_path):
@@ -79,15 +82,12 @@ def load_candidate(name):
                 known.add(coord_key)
 
                 i = m[u]
-                l = len(coord)
                 if i not in coord_map_candidate:
-                    coord_map_candidate[i] = {}
-                if l not in coord_map_candidate[i]:
-                    coord_map_candidate[i][l] = []
+                    coord_map_candidate[i] = []
                 # the character is already learned
-                if coord_map_candidate[i][l] == PLACEHOLDER_LEARNED:
-                    continue
-                coord_map_candidate[i][l].append(list(coord))
+                # if coord_map_candidate[i][l] == PLACEHOLDER_LEARNED:
+                #     continue
+                coord_map_candidate[i].append(list(coord))
 
     candidate_names.add(name)
     print(name + " loaded into candidates")
@@ -96,63 +96,112 @@ def learn_candidate(fuzz):
     global coord_map
 
     for k in coord_map_candidate:
-        cans_font_types = coord_map_candidate[k]
-        # lujing changdu
-        for path_length in cans_font_types:
-            cans = cans_font_types[path_length]
-            # skip known characters
-            if cans == None or cans == PLACEHOLDER_LEARNED:
+        cans = coord_map_candidate[k]
+        # skip known characters
+        if cans == None or cans == PLACEHOLDER_LEARNED:
+            continue
+        cand_confi = len(cans) / len(candidate_names)
+        if len(cans) < 3:
+            print("%s doesn't have enough data to learn (has %d, need %d)" % (
+                k, len(cans), len(candidate_names) * CONFIDENCY
+            ))
+            continue
+
+        # for each glyph, found who agree with more than threshold confidency
+        vote_collected = set() # remember whose vote already contribute to a group
+        for i in range(len(cans)):
+            if cans[i] == PLACEHOLDER_LEARNED or i in vote_collected:
                 continue
-            cand_confi = len(cans) / len(candidate_names)
-            if len(cans) == 1 or len(cans) < 3:
-                print("%s doesn't have enough data to learn (has %d, need %d)" % (
-                    k, len(cans), len(candidate_names) * CONFIDENCY
-                ))
-                continue
+
             agreed = 0
-            for i in range(1, len(cans)):
-                if is_glpyh_similar(cans[0], cans[i], fuzz):
+            total = 0
+            current_agreed = set() # current round of vote group
+            current_agreed.add(i) # me agree with myself
+            for j in range(len(cans)):
+                if i == j or cans[j] == PLACEHOLDER_LEARNED or j in vote_collected:
+                    continue
+                if is_glpyh_similar(cans[i], cans[j], fuzz):
                     agreed += 1
+                    current_agreed.add(j)
+                total += 1
+
+            if total == 0:
+                continue
             # confidency of currnet group
-            confi = agreed / (len(cans) - 1)
-            # the confidency overall fonts
+            confi = agreed / total
+            # the confidency over all fonts
             confi_overall = agreed / len(candidate_names)
             if confi > CONFIDENCY:
-                if k not in coord_map or coord_map[k][0] < confi_overall:
-                    print("learned %s with %d/%d %s" % (
-                        k, agreed, len(cans),
-                        "increased from %.2f to %.2f" % (coord_map[k][0], confi)
-                            if k in coord_map else ""
-                    ))
-                    coord_map[k] = (confi_overall, cans[0])
-                    if confi > HIGH_CONFIDENCY and cand_confi > HIGH_CONFIDENCY:
-                        # clear the candidate buffer
-                        cans_font_types[path_length] = PLACEHOLDER_LEARNED
+                if agreed < CONFIDENT_MINIMUM_VOTER:
+                    print("%s reached confidency %.2f, but only %d agreed, need at least %d" %
+                        (k, confi_overall, agreed, CONFIDENT_MINIMUM_VOTER))
+                    continue
+
+                # memoize the result
+                if k not in coord_map:
+                    coord_map[k] = []
+                updated = False
+                for n in range(len(coord_map[k])):
+                    existing = coord_map[k][n]
+                    if str(existing[-1]) == str(cans[i]):
+                        updated = True
+                        print("+  updated %s confi increased from %.2f to %.2f" % (k, existing[0], confi))
+                        coord_map[k][n] = (confi_overall, len(current_agreed), cans[i])
+                        break
+                if not updated:
+                    coord_map[k].append((confi_overall, len(current_agreed), cans[i]))
+                coord_map[k] = sorted(coord_map[k], key=lambda x: x[0], reverse=True)
+                # truncate
+                if len(coord_map[k]) > FONT_VARIANT_COUNT:
+                    print("*  drop fast_compare map entry for %s (has %d)" % (k, len(coord_map[k])))
+                    coord_map[k] = coord_map[k][:FONT_VARIANT_COUNT]
+
+                print("+ learned %s with %d/%d top 3 confi %s" % (
+                    k, agreed, total, ", ".join(["%.2f" % j[0] for j in coord_map[k][:3]])
+                ))
+
+                for i in current_agreed:
+                    vote_collected.add(i)
+                
+                # drop
+                if confi > HIGH_CONFIDENCY and cand_confi > HIGH_CONFIDENCY:
+                    # print("*  mark %d as clear" % len(current_agreed))
+                    # mark candidate buffer as clear, clear outside of the loop
+                    for i in current_agreed:
+                        coord_map_candidate[k][i] = PLACEHOLDER_LEARNED
             else:
-                print(k, "failed", agreed, (len(cans) - 1) * CONFIDENCY)
+                print(k, "- failed", agreed, (len(cans) - 1) * CONFIDENCY)
 
-    print("total characters learned %d" % (len(coord_map)))
+        # clean up
+        coord_map_candidate[k] = [j for j in coord_map_candidate[k] if j != PLACEHOLDER_LEARNED]
 
-    with open("fast_compare.json", "w") as f:
+    print("+ total characters learned %d (%d variants)" % (len(coord_map), sum([len(coord_map[k]) for k in coord_map])))
+
+    with open("fast_compare_full.json", "w") as f:
         f.write(json.dumps([coord_map, coord_map_candidate, list(candidate_names)]))
+    with open("fast_compare.json", "w") as f:
+        f.write(json.dumps([coord_map, {}, []]))
 
 def preload(fuzz):
     global coord_map
     global coord_map_candidate
     global candidate_names
 
-    if os.path.exists("fast_compare.json"):
-        with open("fast_compare.json") as f:
-           [coord_map, coord_map_candidate, candidate_names] = json.loads(f.read())
-        print("loaded %d characters" % (len(coord_map)))
-        candidate_names = set(candidate_names)
+    for ff in ["fast_compare_full.json", "fast_compare.json"]:
+        if os.path.exists(ff):
+            with open(ff) as f:
+                [coord_map, coord_map_candidate, candidate_names] = json.loads(f.read())
+                print("> loaded %d characters" % (len(coord_map)))
+                candidate_names = set(candidate_names)
+            print("> loaded " + ff)
+            break
 
     for p in os.listdir("results-ocr"):
         if not p.endswith(".json"):
             continue
         load_candidate(os.path.splitext(p)[0])
     
-    print("preload %d candidates" % len(candidate_names))
+    print("> preload %d candidates" % len(candidate_names))
 
     learn_candidate(fuzz)
 
@@ -171,12 +220,14 @@ def find_by_coord(ttf, fuzz):
             coord = list(ttf['glyf'][y[1]].coordinates)
             cans = []
             for rc in coord_map:
-                confi, ico = coord_map[rc]
-                if len(coord) != len(ico):
-                    continue
-                if is_glpyh_similar(coord, ico, fuzz):
-                    #print("found ", tc, "==", rc, "(", known_chars[rc], ")")
-                    cans.append((rc, confi))
+                for group in coord_map[rc]:
+                    confi, count, ico = group
+                    if len(coord) != len(ico):
+                        continue
+                    if is_glpyh_similar(coord, ico, fuzz):
+                        # print("found ", tc, "==", rc)
+                        # confidency first, then compare agreed voters count
+                        cans.append((rc, (confi, count)))
             
             if cans:
                 if len(cans) > 1:
@@ -268,7 +319,7 @@ def parse(font_name, temp, coord_fuzz=40):
             raise Exception(", ".join(errors))
         # save result for fast compare
         with open(os.path.join("results-ocr", "%s.json" % font_name), "wb") as f:
-            f.write(json.dumps(char_map).encode("utf-8"))
+            f.write(json.dumps(ocr_char_map).encode("utf-8"))
         
         # only fill in unknowns
         for k in missing:
