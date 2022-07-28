@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>jjget</RootNamespace>
     <AssemblyName>jjget</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -176,11 +176,8 @@
     <Delete Files="$(DistDirectoryTemp)\jjget.pdb" />
     <Delete Files="$(DistDirectoryTemp)\jjget.exe.config" />
     <Copy SourceFiles="bin\Debug\.jjfont" DestinationFolder="$(DistDirectoryTemp)" />
-    <GetAssemblyIdentity
-        AssemblyFiles="$(TargetPath)">
-      <Output
-          TaskParameter="Assemblies"
-          ItemName="MyAssemblyIdentities"/>
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="MyAssemblyIdentities" />
     </GetAssemblyIdentity>
     <ZipDirectory SourceDirectory="$(DistDirectoryTemp)" Overwrite="true" DestinationFile="$(DistDirectory)\$(AssemblyName)-%(MyAssemblyIdentities.Version).zip" />
   </Target>

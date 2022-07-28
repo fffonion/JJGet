@@ -47,7 +47,7 @@ namespace jjget
         {
             HttpWebRequest request;
             Encoding encoding = Encoding.Default;
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             request = (HttpWebRequest)HttpWebRequest.Create(url);
             request.KeepAlive = true;
             request.Method = "get";
