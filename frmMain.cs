@@ -12,6 +12,7 @@ namespace jjget
     {
         Novel novel;
         bool need_stop = false;
+        bool should_draw_verifycode_retry = false;
         Thread downloadThread = null;
         List<PictureBox> progboxes = new List<PictureBox>();
         ComponentResourceManager res;
@@ -86,6 +87,7 @@ namespace jjget
         {
             this.Invoke(new Action(() =>
             {
+                should_draw_verifycode_retry = false;
                 txtVerifyCode.Text = "";
                 if (text.Length == 0)
                 {
@@ -121,6 +123,23 @@ namespace jjget
             {
                 MessageBox.Show("代理输入错误", "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void getVerifyCodeAndDisplay()
+        {
+            try
+            {
+                novel.checkVerifyCode(txtUsername.Text, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("验证码获取失败，请重试\n" + ex.ToString(), "JJGET-ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                should_draw_verifycode_retry = true;
+                picVerifyCode.Invalidate();
+                return;
+            }
+            
+            should_draw_verifycode_retry = false;
         }
 
         private void btnGetIndex_Click(object sender, EventArgs e)
@@ -374,7 +393,7 @@ namespace jjget
                     {
                         MessageBox.Show("登录失败！", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         // reset verify code
-                        novel.checkVerifyCode(txtUsername.Text, false);
+                        getVerifyCodeAndDisplay();
                     }
                     this.Invoke(new Action(() => btnLogin.Enabled = true));
                 })).Start();
@@ -418,7 +437,7 @@ namespace jjget
             new Thread(new ThreadStart(() =>
             {
                 this.Invoke(new Action(() => btnLogin.Enabled = false));
-                novel.checkVerifyCode(txtUsername.Text, false);
+                getVerifyCodeAndDisplay();
                 this.Invoke(new Action(() => btnLogin.Enabled = true));
             })).Start();
         }
@@ -439,6 +458,23 @@ namespace jjget
         private void chkIncludeAuthorsWords_CheckedChanged(object sender, EventArgs e)
         {
             novel.setIncludeAuthorsWords(chkIncludeAuthorsWords.Checked);
+        }
+
+
+
+        private void picVerifyCode_Click(object sender, EventArgs e)
+        {
+            getVerifyCodeAndDisplay();
+        }
+
+        private void picVerifyCode_Paint(object sender, PaintEventArgs e)
+        {
+            if (!should_draw_verifycode_retry) return;
+
+            using (Font myFont = new Font("Microsoft Yahei", 10))
+            {
+                e.Graphics.DrawString("点这里刷新验证码", myFont, Brushes.Green, new Point(2, 2));
+            }
         }
     }
 }
