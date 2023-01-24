@@ -190,6 +190,7 @@ namespace jjget
 
         public bool checkVerifyCode(string username, bool force)
         {
+            _savedHttpUtil= null; // force a new httputil to not reuse connection pool
             HttpUtil hu = getHTTPUtil();
             Random rnd = new Random();
             string result = hu.Get("http://my.jjwxc.net/login.php?action=checkneedauthnum&" +
@@ -209,21 +210,43 @@ namespace jjget
             return false;
         }
 
-        public bool jjLogin(string username, string pwd, string verifycode)
+        public bool jjLogin(string username, string pwd, string verifycode, string customCookiestr)
         {
             setPrompt("正在登陆……");
             HttpUtil hu = getHTTPUtil();
+            if(customCookiestr != null)
+            {
+                hu.cookiestr = customCookiestr;
+                cookiestr = customCookiestr;
+            } else
+            {
+                string result = hu.Get("http://my.jjwxc.net/login.php?" +
+                     "action=login&login_mode=ajax&loginname=" + username + "&loginpassword=" + pwd + "&" +
+                     "Ekey=&Challenge=&auth_num=" + verifycode + "&cookietime=1&" +
+                     "client_time=" + HttpUtil.getTimeStamp() +
+                     "&jsonp=jQuery18008677560358499031_" + HttpUtil.getTimeStamp() + "123" +
+                     "&_=" + HttpUtil.getTimeStamp() + "123");
+                Regex jsonpRegex = new Regex(@"^[^(]+\((.+)\)$");
+                Match m = jsonpRegex.Match(result);
 
-            string result = hu.Get("http://my.jjwxc.net/login.php?" +
-                "action=login&login_mode=ajax&loginname=" + username + "&loginpassword=" + pwd + "&" +
-                "Ekey=&Challenge=&auth_num=" + verifycode + "&cookietime=1&" +
-                "client_time=" + HttpUtil.getTimeStamp() +
-                "&jsonp=jQuery18008677560358499031_" + HttpUtil.getTimeStamp() + "123" +
-                "&_=" + HttpUtil.getTimeStamp() + "123");
-            Regex jsonpRegex = new Regex(@"^[^(]+\((.+)\)$");
-            Match m = jsonpRegex.Match(result);
+                if (!m.Success)
+                {
+                    setPrompt("登陆响应无法解析，试试用邮箱登陆？ " + result);
+                }
+                else
+                {
+                    result = m.Groups[1].Captures[0].ToString();
+                    JObject jresult = JObject.Parse(result);
+                    if (jresult["state"].ToString() == "10")
+                    {
+                        checkVerifyCode(username, true);
+                    }
+                    setPrompt("登陆失败QAQ: " + jresult["message"].ToString(), Color.Red);
 
-            cookiestr = hu.cookiestr;
+                }
+                cookiestr = hu.cookiestr;
+            }
+
             hasLogin = cookiestr != null && cookiestr.IndexOf("token", 0) > -1;
             if (hasLogin)
             {
@@ -232,21 +255,6 @@ namespace jjget
                 writeSavedUser();
                 setPrompt("登陆成功(*￣▽￣)y ");
                 return true;
-            }
-            if (!m.Success)
-            {
-                setPrompt("登陆响应无法解析，试试用邮箱登陆？ " + result);
-            }
-            else
-            {
-                result = m.Groups[1].Captures[0].ToString();
-                JObject jresult = JObject.Parse(result);
-                if (jresult["state"].ToString() == "10")
-                {
-                    checkVerifyCode(username, true);
-                }
-                setPrompt("登陆失败QAQ: " + jresult["message"].ToString(), Color.Red);
-
             }
 
             return false;

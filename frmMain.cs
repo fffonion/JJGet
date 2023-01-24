@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
 using System.Threading;
+using System.Windows.Forms;
+using Microsoft.VisualBasic;
 
 namespace jjget
 {
@@ -16,6 +17,7 @@ namespace jjget
         Thread downloadThread = null;
         List<PictureBox> progboxes = new List<PictureBox>();
         ComponentResourceManager res;
+        string customCookieStr;
         public frmMain()
         {
             novel = new Novel();
@@ -361,7 +363,7 @@ namespace jjget
             }
             if (isCheck)//check only
                 return false;
-            if (novel.jjLogin(txtUsername.Text, txtPwd.Text, txtVerifyCode.Text))
+            if (novel.jjLogin(txtUsername.Text, txtPwd.Text, txtVerifyCode.Text, customCookieStr))
             {
                 this.Invoke(setctls);
                 return true;
@@ -398,13 +400,39 @@ namespace jjget
                     this.Invoke(new Action(() => btnLogin.Enabled = true));
                 })).Start();
             }
+            else if (btnLogin.Text == "Cookie登陆")
+            {
+                string cookieJS = @"javascript: (function(){const input=document.createElement(""input"");input.value=document.cookie;document.body.appendChild(input);input.focus();input.select();var result=document.execCommand(""copy"");document.body.removeChild(input);if(result){prompt(""Cookie已经复制到剪贴板:\n\n"",input.value)}else{prompt(""Cookie复制失败,请手动复制:\n\n"",input.value)}})();";
+
+                Clipboard.SetText(cookieJS);
+                while (true)
+                {
+                    customCookieStr = Interaction.InputBox("请在浏览器中新建一个书签，并将网址填写为下列内容，名称随便（已复制到剪贴板，可直接粘贴）:\n\n" + 
+                        cookieJS + "\n\n然后在浏览器中登录晋江之后，点击刚才新建的书签，将Cookie填入程序的弹框中，并按确定。", "请输入Cookie字符串", null);
+                    if (customCookieStr == null) return; //escape hatch
+                    if (customCookieStr.IndexOf("token", 0) > -1) break;
+                    MessageBox.Show("Cookie不太对，请检查复制的Cookie中是否包含token！", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
+                btnLogin.Enabled = false;
+                new Thread(new ThreadStart(() =>
+                {
+                    if (!loginRoutine(false))
+                    {
+                        MessageBox.Show("登录失败！", "JJGET-WARNING", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        // reset verify code
+                        getVerifyCodeAndDisplay();
+                    }
+                    this.Invoke(new Action(() => btnLogin.Enabled = true));
+                })).Start();
+            }
             else
             {
                 novel.deleteSavedUser();
                 lblLoginInfo.Visible = false;
                 lblLoginInfo.Text = "";
                 chkIgnoreFontDecodingError.Visible = false;
-                btnLogin.Text = "登陆";
+                //btnLogin.Text = "登陆";
+                btnLogin.Text = "Cookie登陆";
             }
         }
 
