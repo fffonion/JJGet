@@ -142,13 +142,13 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack">
-      <Version>1.11.32</Version>
+      <Version>1.11.46</Version>
     </PackageReference>
     <PackageReference Include="ILRepack">
       <Version>2.0.18</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
+      <Version>13.0.2</Version>
     </PackageReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
