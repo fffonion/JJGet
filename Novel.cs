@@ -279,7 +279,8 @@ namespace jjget
             string _nick = tb.SelectSingleNode("./tr[" + (isWriter? "3" : "2") + "]/td[2]/div").InnerText;
             if (_nick != "您还没有设置昵称")
                 userDetail += " " + _nick;
-            userDetail += " "+tb.SelectSingleNode("./tr[" + (isWriter ? "8" : "7") + "]//div/span").InnerText;
+            // disable email for now
+            // userDetail += " "+tb.SelectSingleNode("./tr[" + (isWriter ? "8" : "7") + "]//td[@id='emailtd']/text()").InnerText;
         }
 
         private string stripEmpty(string input)
@@ -430,7 +431,7 @@ namespace jjget
             }
             else
             {
-                HtmlNode novelnode = root.SelectSingleNode("//div[contains(@class,'noveltext')]");
+                HtmlNode novelnode = root.SelectSingleNode("//div[@class='novelbody']/div");
                 if(novelnode == null)
                 {
                     throw new Exception("章节" + chapter + (isVip ? "是VIP章节，请登陆ww":"解析失败"));
@@ -491,8 +492,31 @@ namespace jjget
                     mainbody = novelnode.InnerHtml;
                 }
 
+                var styles = "";
+                foreach (var e in root.SelectNodes("//style"))
+                {
+                    styles += e.InnerText;
+                }
+                var cssRegexStr = @"[^{]+{\s*content\s*:\s*['""](.*?)['""]\s*;*\s*}";
+                mainbody = Regex.Replace(mainbody, @"<span\s+class='([^']+)'>([^<]+)</span>", m => {
+                    var clsName = m.Groups[1].Value;
+                    var text = m.Groups[2].Value;
+                    var mb = Regex.Match(styles, clsName + ":before" + cssRegexStr);
+                    if(mb.Success)
+                    {
+                        text = mb.Groups[1].Value + text;
+                    }
+                    var ma = Regex.Match(styles, clsName + ":after" + cssRegexStr);
+                    if (ma.Success)
+                    {
+                        text += ma.Groups[1].Value;
+                    }
+                    return text;
+                 });
+
+
                 mainbody = HtmlEntity.DeEntitize(
-                       mainbody.Replace("<br>", "\r\n").Replace("</br>", "\r\n"));
+                       mainbody.Replace("<br>", "\r\n").Replace("</br>", "\r\n").Replace("&zwnj;", ""));
 
                 if (fontName != "")
                 {
@@ -501,8 +525,6 @@ namespace jjget
                 chpt.content = "　　" +
                     mainbody.Replace("@无限好文，尽在晋江文学城", "").Replace("@无限好文，尽晋江文学城","").Trim() + 
                     chpt.content;
-                
-                
             }
             chpt.chapterIndex = chapter;
             setPrompt("章节"+chapter+"("+chpt.title+")已完成");
