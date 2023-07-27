@@ -40,7 +40,7 @@ namespace jjget
             ignoreDecodingErrors = ignore;
         }
 
-        Regex customChar = new Regex(@"&#x([a-f0-9]+)");
+        Regex customChar = new Regex(@"&#x([a-f0-9]{4})");
         public string Decode(string ct, string fontName)
         {
             if (!map.ContainsKey(fontName))
