@@ -2,7 +2,7 @@ JJGET
 ======
 亲，绿色安全无污染的晋江拖文章工具收好
 
-![haha](https://img.yooooo.us/rf.jpg)
+![haha](screenshot.png)
 
 [度盘镜像](http://pan.baidu.com/s/1EikSA); 大概需要安装[.NET 4.8](https://go.microsoft.com/fwlink/?linkid=2088631) 
 
