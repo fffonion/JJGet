@@ -7,6 +7,7 @@ using System.Drawing;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using System.IO.Compression;
 
 namespace jjget
 {
@@ -28,6 +29,7 @@ namespace jjget
         private string cookiestr;
         public string userDetail;
         public bool hasLogin = false;
+        private string lastParsedHTML;
         private WebProxy proxy = null;
         private Action<string, Color> setProgressDelegate;
         private Action<byte[]> setVerifyCodeDelegate;
@@ -269,14 +271,15 @@ namespace jjget
             HtmlNode root = hd.DocumentNode;
             HtmlNode tb = root.SelectSingleNode("//table[@bgcolor='#009900']");
             bool isWriter = false;
-            var detailTr = tb.SelectSingleNode("./tr[1]//font[@class='readerid']");
+            var detailTr = tb.SelectSingleNode(".//tr//font[@class='readerid']");
             if (detailTr == null)
             {
                 detailTr = tb.SelectSingleNode("./tr[1]//div[1]");
                 isWriter = true;
             }
-            userDetail = "已登录 ID: " + detailTr.InnerText.Trim();
-            string _nick = tb.SelectSingleNode("./tr[" + (isWriter? "3" : "2") + "]/td[2]/div").InnerText;
+            userDetail = "已登录 ID: " + (detailTr != null ? detailTr.InnerText.Trim(): "未知ID");
+            var _nickInput = tb.SelectSingleNode("//input[@name='birthday']");
+            string _nick = _nickInput == null ? _nickInput.GetAttributeValue("value", "未知昵称") : "未知昵称";
             if (_nick != "您还没有设置昵称")
                 userDetail += " " + _nick;
             // disable email for now
@@ -413,6 +416,7 @@ namespace jjget
             //StreamReader sFile = new StreamReader(fs);
             //string html = sFile.ReadToEnd();
             //setPrompt("分析中……", Color.Orange);
+            lastParsedHTML = html;
             HtmlAgilityPack.HtmlDocument hd = new HtmlAgilityPack.HtmlDocument();
             hd.LoadHtml(html);
             HtmlNodeCollection hnc;
@@ -472,6 +476,7 @@ namespace jjget
                     {
                         context[key] = getInputLabelValue(root, key);
                     }
+                    // jsid 就是用户ID
                     Regex jsidRegex = new Regex(@"//my\.jjwxc\.net/backend/favorite\.php\?jsid=(\d+)");
                     var match = jsidRegex.Match(root.InnerHtml);
                     if(!match.Success)
@@ -633,6 +638,35 @@ namespace jjget
         public FontDecoder getFontDecoder()
         {
             return fontDecoder;
+        }
+
+        public void writeDebugInfo(string path)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    using (var entryStream = archive.CreateEntry("singlePage.html").Open())
+                    using (var streamWriter = new StreamWriter(entryStream))
+                    {
+                        streamWriter.Write(lastParsedHTML);
+                    }
+
+                    using (var entryStream = archive.CreateEntry("config.txt").Open())
+                    using (var streamWriter = new StreamWriter(entryStream))
+                    {
+                        streamWriter.WriteLine("novelid: " + novelid);
+                        streamWriter.WriteLine("useMobileEdition: " + useMobileEdition);
+                        streamWriter.WriteLine("hasLogin: " + hasLogin);
+                    }
+                }
+
+                using (var fileStream = new FileStream(path, FileMode.Create))
+                {
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    memoryStream.CopyTo(fileStream);
+                }
+            }
         }
     }
 }

@@ -246,12 +246,14 @@ namespace jjget
                             break;
                         }
                     }
+
                     if (terminate)
                     {
                         this.Invoke(new Action(() =>
                         {
                             btnStart.Text = "开始";
-                            setPrompt(("已中断下载"), Color.Red);
+                            novel.writeDebugInfo("jjdebug.zip");
+                            setPrompt(("调试信息已经保存到jjdebug.zip，虽然其中不包含登录数据，但请勿公开分享"), Color.Red);
                         }));
                         return;
                     }
